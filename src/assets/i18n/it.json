@@ -464,7 +464,7 @@
     "accountPlaceholder": "Conto risparmio, conto stipendio",
     "owedToday": "Quanto devi oggi ({currency})",
     "balanceToday": "Saldo di oggi ({currency})",
-    "adjustHint": "Se cambi il saldo, viene corretto senza creare un movimento, quindi non conta né come entrata né come spesa.",
+    "adjustHint": "Se cambi il saldo, compare una rettifica nei movimenti che non conta né come entrata né come spesa.",
     "creditLimit": "Plafond ({currency})",
     "cutDay": "Giorno di chiusura",
     "payDay": "Giorno di pagamento",
@@ -549,7 +549,9 @@
     "available": "Disponibile {amount}",
     "inGoals": "Negli obiettivi {amount}",
     "owedToMe": "Ti devono {amount}",
-    "owe": "Devi {amount}"
+    "owe": "Devi {amount}",
+    "cardsToPay": "Da pagare sulle carte",
+    "afterCards": "Disponibile dopo aver pagato le carte"
   },
   "tabs": {
     "inicio": {
@@ -621,7 +623,11 @@
     },
     "exceeded": "Hai superato il limite in {names}",
     "near": "Vicino al limite: {names}",
-    "cardsUse": "Usi il 30% o più del plafond: {names}"
+    "cardsUse": "Usi il 30% o più del plafond: {names}",
+    "cardsOverdue": {
+      "one": "La carta {names} ha un pagamento scaduto",
+      "other": "Le carte {names} hanno un pagamento scaduto"
+    }
   },
   "compare": {
     "title": "Mese per mese",
@@ -1222,6 +1228,11 @@
     "dbFailed": "Impossibile aprire il database locale. Chiudi e riapri l'app.\n\nDettaglio: {detail}"
   },
   "changelog": {
+    "1_0_14": [
+      "Nella Home vedi quanto devi pagare delle carte e quanto ti resta disponibile dopo averle pagate.",
+      "Correggere il saldo di un conto lascia una \"Rettifica\" visibile nei movimenti, che puoi eliminare.",
+      "L'avviso della carta dice \"scaduto\" quando la data di pagamento è passata."
+    ],
     "1_0_13": [
       "Pulsante del microfono per dettare: tocca il microfono in \"Nuovo movimento\", di' \"speso 500 di benzina\" e il modulo si compila da solo.",
       "Me lo posso permettere? ora risponde prima con i soldi di questo mese e, sotto, contando tutto il tuo patrimonio."
@@ -1766,5 +1777,18 @@
     "listening": "Ti ascolto… dillo come lo diresti a qualcuno.",
     "noMic": "Per dettare, Kuarto ha bisogno del permesso per il microfono.",
     "failed": "Impossibile usare il microfono. Riprova."
+  },
+  "cardsToPay": {
+    "title": "Da pagare sulle carte",
+    "hint": "Quanto resta da pagare dell'ultimo estratto conto di ogni carta per non pagare interessi. Gli acquisti dopo la chiusura vanno all'estratto successivo.",
+    "noCut": "Mancano i giorni di chiusura e pagamento: si conta tutto il debito."
+  },
+  "adjust": {
+    "title": "Rettifica del saldo",
+    "row": "Rettifica · {account}",
+    "open": "Vedi rettifica del saldo {name}, {amount}",
+    "detail": "{title}: {amount} il {date}. Corregge il saldo del conto e non conta come entrata né come spesa.",
+    "delete": "Elimina rettifica",
+    "confirm": "Il saldo del conto torna com'era prima della rettifica."
   }
 }

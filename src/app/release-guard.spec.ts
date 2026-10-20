@@ -9,3 +9,16 @@ describe('versión limpia', () => {
     expect(main).not.toContain('__c');
   });
 });
+
+// Si se sube una versión y se olvida otro archivo, la app se anuncia con un número y el APK trae otro.
+describe('versiones alineadas', () => {
+  const read = (path: string) => readFileSync(resolve(process.cwd(), path), 'utf8');
+  const app = /APP_VERSION = '([^']+)'/.exec(read('src/app/version.ts'))![1];
+
+  it('package.json, version.ts, build.gradle y las novedades dicen la misma versión', () => {
+    const gradle = read('android/app/build.gradle');
+    expect(JSON.parse(read('package.json')).version).toBe(app);
+    expect(/versionName "([^"]+)"/.exec(gradle)![1]).toBe(app);
+    expect(/const VERSIONS = \['([^']+)'/.exec(read('src/app/ui/news/changelog.ts'))![1]).toBe(app);
+  });
+});

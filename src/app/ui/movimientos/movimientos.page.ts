@@ -31,7 +31,7 @@ import { APP_CONTAINER } from '../../app.container';
 import { DeletedTransaction } from '../../application/use-cases/delete-transaction';
 import { Account, CASH_ACCOUNT_ID, Transfer } from '../../domain/account';
 import { Category, isExpenseType } from '../../domain/category';
-import { DineroFormService } from '../dinero/dinero-form.service';
+import { adjustmentText, DineroFormService } from '../dinero/dinero-form.service';
 import { Transaction } from '../../domain/transaction';
 import { formatDay, formatMoney } from '../format';
 import { DropdownComponent } from '../dropdown.component';
@@ -167,12 +167,14 @@ export class MovimientosPage {
           !account || tr.fromAccountId === account || tr.toAccountId === account,
       )
       .map((tr) => {
-        const title = `${names.get(tr.fromAccountId) ?? t('cuentas.account')} → ${names.get(tr.toAccountId) ?? t('cuentas.account')}`;
+        const adjustment = adjustmentText(tr, names);
+        const title = adjustment?.title ?? `${names.get(tr.fromAccountId) ?? t('cuentas.account')} → ${names.get(tr.toAccountId) ?? t('cuentas.account')}`;
         return {
           transfer: tr,
+          adjustment: !!adjustment,
           title,
           sub: `${tr.note ? tr.note + ' · ' : ''}${formatDay(tr.date)}`,
-          amount: formatMoney(tr.amount),
+          amount: adjustment?.amount ?? formatMoney(tr.amount),
           haystack: fold(`${title} ${tr.note}`),
         };
       })

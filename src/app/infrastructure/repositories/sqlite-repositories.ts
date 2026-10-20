@@ -637,7 +637,7 @@ export class SqliteAccountRepository implements IAccountRepository {
   async list(): Promise<Account[]> {
     // Efectivo primero, luego por tipo y nombre.
     return (
-      await this.db.all<AccountRow>(`SELECT * FROM accounts ORDER BY id <> 'acc-efectivo', type, name`)
+      await this.db.all<AccountRow>(`SELECT * FROM accounts WHERE id <> 'acc-ajuste' ORDER BY id <> 'acc-efectivo', type, name`)
     ).map(toAccount);
   }
 
@@ -684,7 +684,7 @@ export class SqliteAccountRepository implements IAccountRepository {
          - COALESCE((SELECT SUM(amount) FROM transfers WHERE from_account = a.id AND date <= ?), 0)
          - COALESCE((SELECT SUM(CASE WHEN withdrawal = 1 THEN -amount ELSE amount END)
                      FROM savings_contributions WHERE account_id = a.id AND date <= ?), 0) AS balance
-       FROM accounts a`,
+       FROM accounts a WHERE a.id <> 'acc-ajuste'`,
       [until, until, until, until],
     );
     return new Map(rows.map((r) => [r.id, r.balance]));

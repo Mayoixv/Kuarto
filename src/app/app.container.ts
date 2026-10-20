@@ -13,6 +13,7 @@ import {
   DeleteTransfer,
   GetAccountsOverview,
   GetCardStatuses,
+  GetCardsToPay,
   GetNetWorth,
   SaveAccount,
   SetCardMinimum,
@@ -147,6 +148,7 @@ export interface AppContainer {
   getAccountsOverview: GetAccountsOverview;
   getCardStatuses: GetCardStatuses;
   getNetWorth: GetNetWorth;
+  getCardsToPay: GetCardsToPay;
   canAfford: CanAfford;
   setCardMinimum: SetCardMinimum;
   saveTransfer: SaveTransfer;
@@ -188,7 +190,7 @@ export function buildContainer(repos: Repositories, ids: IdGenerator = uuidGener
   const addSavingsGoal = new AddSavingsGoal(repos.savings, ids);
   const currencySettings = new CurrencySettings(repos.settings);
   const saveAccount = new SaveAccount(repos.accounts, ids);
-  const adjustAccountBalance = new AdjustAccountBalance(repos.accounts);
+  const adjustAccountBalance = new AdjustAccountBalance(repos.accounts, ids);
   const saveDebt = new SaveDebt(repos.debts, ids);
   const profile = new UserProfile(repos.settings);
   const onboarding = new Onboarding(repos.settings, repos.transactions, repos.recurring);
@@ -258,6 +260,7 @@ export function buildContainer(repos: Repositories, ids: IdGenerator = uuidGener
     canAfford: new CanAfford(getMonthHistory, getAccountsOverview, getMonthRecurringExpenses, repos.categories),
     setCardMinimum: new SetCardMinimum(repos.settings),
     getNetWorth: new GetNetWorth(getAccountsOverview, getDebtsOverview, repos.savings),
+    getCardsToPay: new GetCardsToPay(getAccountsOverview, getCardStatuses),
     getCardStatuses,
     saveTransfer: new SaveTransfer(repos.accounts, ids),
     deleteTransfer: new DeleteTransfer(repos.accounts),

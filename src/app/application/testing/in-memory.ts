@@ -2,7 +2,7 @@ import { Budget } from '../../domain/budget';
 import { Category } from '../../domain/category';
 import { monthOf, MonthKey } from '../../domain/month';
 import { RecurringExpense, RecurringExpenseInstance } from '../../domain/recurring-expense';
-import { Account, CASH_ACCOUNT_ID, Transfer } from '../../domain/account';
+import { Account, ADJUST_ACCOUNT_ID, CASH_ACCOUNT_ID, Transfer } from '../../domain/account';
 import { Debt, DebtPayment } from '../../domain/debts';
 import { SavingsContribution, SavingsGoal, signedAmount } from '../../domain/savings';
 import { Attachment, Transaction } from '../../domain/transaction';
@@ -143,7 +143,7 @@ export class InMemoryAccounts implements IAccountRepository {
     private readonly categories: InMemoryCategories,
     private readonly savings?: InMemorySavings,
   ) {}
-  async list() { return [...this.items.values()]; }
+  async list() { return [...this.items.values()].filter((a) => a.id !== ADJUST_ACCOUNT_ID); }
   async get(id: string) { return this.items.get(id); }
   async save(a: Account) { this.items.set(a.id, a); }
   async delete(id: string) { this.items.delete(id); }
@@ -171,6 +171,7 @@ export class InMemoryAccounts implements IAccountRepository {
       if (c.date > upTo || !c.accountId) continue;
       out.set(c.accountId, (out.get(c.accountId) ?? 0) - signedAmount(c));
     }
+    out.delete(ADJUST_ACCOUNT_ID);
     return out;
   }
   async listTransfers(month?: string) {

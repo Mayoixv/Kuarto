@@ -255,6 +255,13 @@ describe('migración 8: cuentas', () => {
     expect(await accounts.isInUse('v')).toBe(true);
     expect((await accounts.get('v'))?.creditLimit).toBe(50000);
     expect((await accounts.list()).map((a) => a.id)[0]).toBe('acc-efectivo');
+
+    // Un ajuste de saldo mueve la cuenta ajustada; la cuenta interna no sale en listas ni en saldos.
+    await accounts.saveTransfer({ id: 'aj', date: '2026-10-05', amount: 200, fromAccountId: 'acc-ajuste', toAccountId: 'b', note: '' });
+    const after = await accounts.balances();
+    expect(after.get('b')).toBe(1700);
+    expect(after.has('acc-ajuste')).toBe(false);
+    expect((await accounts.list()).some((a) => a.id === 'acc-ajuste')).toBe(false);
   });
 });
 

@@ -464,7 +464,7 @@
     "accountPlaceholder": "Savings account, payroll",
     "owedToday": "What you owe today ({currency})",
     "balanceToday": "Today's balance ({currency})",
-    "adjustHint": "If you change the balance, it's adjusted without creating a transaction, so it doesn't count as income or expense.",
+    "adjustHint": "If you change the balance, an adjustment appears in Transactions that doesn't count as income or expense.",
     "creditLimit": "Credit limit ({currency})",
     "cutDay": "Statement day",
     "payDay": "Payment day",
@@ -549,7 +549,9 @@
     "available": "Available {amount}",
     "inGoals": "In goals {amount}",
     "owedToMe": "Owed to you {amount}",
-    "owe": "You owe {amount}"
+    "owe": "You owe {amount}",
+    "cardsToPay": "Due on cards",
+    "afterCards": "Available after paying cards"
   },
   "tabs": {
     "inicio": {
@@ -621,7 +623,11 @@
     },
     "exceeded": "You went over in {names}",
     "near": "Close to the limit: {names}",
-    "cardsUse": "You're using 30% or more of the limit: {names}"
+    "cardsUse": "You're using 30% or more of the limit: {names}",
+    "cardsOverdue": {
+      "one": "Card {names} has an overdue payment",
+      "other": "Cards {names} have an overdue payment"
+    }
   },
   "compare": {
     "title": "Month by month",
@@ -1222,6 +1228,11 @@
     "dbFailed": "Couldn't open the local database. Close and reopen the app.\n\nDetails: {detail}"
   },
   "changelog": {
+    "1_0_14": [
+      "Home shows how much you owe on your cards and what's left available after paying them.",
+      "Correcting an account balance now leaves a visible \"Adjustment\" in Transactions, which you can delete.",
+      "The card alert says \"overdue\" once the payment date has passed."
+    ],
     "1_0_13": [
       "Mic button to dictate: tap the mic in \"New entry\", say \"spent 500 on gas\" and the form fills itself.",
       "\"Can I afford it?\" now answers first with this month's money and, below, counting your whole net worth."
@@ -1759,5 +1770,18 @@
     "listening": "Listening… say it like you'd tell someone.",
     "noMic": "To dictate, Kuarto needs permission to use the microphone.",
     "failed": "Couldn't use the microphone. Try again."
+  },
+  "cardsToPay": {
+    "title": "Due on cards",
+    "hint": "What's left to pay on each card's last statement to avoid interest. Purchases after the closing date go to the next statement.",
+    "noCut": "Closing and payment days aren't set: the whole balance is counted."
+  },
+  "adjust": {
+    "title": "Balance adjustment",
+    "row": "Adjustment · {account}",
+    "open": "View balance adjustment {name}, {amount}",
+    "detail": "{title}: {amount} on {date}. It corrects the account balance and doesn't count as income or expense.",
+    "delete": "Delete adjustment",
+    "confirm": "The account balance goes back to what it was before the adjustment."
   }
 }

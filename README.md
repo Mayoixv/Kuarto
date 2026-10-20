@@ -40,6 +40,7 @@ Para revisar solo lee la lista de versiones de GitHub: no envía ningún dato tu
 - **Ajustes › Tus datos › Crear respaldo** guarda un archivo cifrado con tu contraseña en `Documentos/Kuarto`. Cópialo fuera del teléfono (Drive, correo).
 - **Respaldo en la nube** (opcional): entras con Google y el respaldo semanal se sube cifrado con tu contraseña a Firebase. Nadie puede leerlo sin esa contraseña.
 - Para pasar tus datos a otro teléfono: instala Kuarto y usa **Restaurar respaldo** con el archivo, o **Restaurar desde la nube**.
+- Android no copia la app por su cuenta a tu cuenta de Google: los únicos respaldos son los de Kuarto.
 - Si borras la app sin un respaldo, tus datos se pierden: nadie más tiene una copia.
 
 ## Desarrollo
@@ -81,7 +82,8 @@ cd android && ./gradlew assembleDebug
 
 ### Publicar una versión
 
-1. Sube el número en `src/app/version.ts` y `versionCode` / `versionName` en `android/app/build.gradle`.
+1. Sube el número en `src/app/version.ts`, en `package.json` (`npm version X.Y.Z --no-git-tag-version`, que también cambia `package-lock.json`) y `versionCode` / `versionName` en `android/app/build.gradle`. Agrega la versión a `src/app/ui/news/changelog.ts` con sus novedades. `npm test` falla si alguno no coincide.
+   Sube también `package.json` y `package-lock.json` con el resto de los cambios.
 2. Compila con `./gradlew assembleRelease`. La firma se lee de `../../firma/keystore.properties`, fuera del repositorio; sin ese archivo el APK sale sin firmar.
 3. Crea un Release en GitHub con la etiqueta `vX.Y.Z` y adjunta el APK como `Kuarto-X.Y.Z.apk`.
 

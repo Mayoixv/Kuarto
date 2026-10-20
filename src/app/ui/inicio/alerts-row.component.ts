@@ -44,6 +44,15 @@ function toAlerts(a: Alerts): Alert[] {
       target: 'fijos',
     });
   }
+  if (a.cardsOverdue.length) {
+    out.push({
+      key: 'cards-overdue',
+      icon: 'alert-circle',
+      tone: 'danger',
+      text: tn('alerts.cardsOverdue', a.cardsOverdue.length, { names: names(a.cardsOverdue) }),
+      target: 'cuentas',
+    });
+  }
   if (a.cardsDue.length) {
     out.push({
       key: 'cards-due',

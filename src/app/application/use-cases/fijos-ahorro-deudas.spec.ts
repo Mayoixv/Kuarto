@@ -1,3 +1,4 @@
+import { adjustmentOf } from '../../domain/account';
 import { ValidationError } from '../errors';
 import {
   InMemoryAccounts,
@@ -24,7 +25,7 @@ import { GetUpcomingRecurring } from './get-upcoming-recurring';
 import { Onboarding } from './onboarding';
 import { UserProfile } from './user-profile';
 import { GetAlerts } from './get-alerts';
-import { AdjustAccountBalance, ArchiveAccount, DeleteAccount, GetAccountsOverview, GetCardStatuses, GetNetWorth, SaveAccount, SaveTransfer, SetCardMinimum } from './accounts';
+import { AdjustAccountBalance, ArchiveAccount, DeleteAccount, DeleteTransfer, GetAccountsOverview, GetCardStatuses, GetCardsToPay, GetNetWorth, SaveAccount, SaveTransfer, SetCardMinimum } from './accounts';
 import { UpdateTransaction } from './update-transaction';
 import { GetMonthHistory } from './get-month-history';
 import { GetReport } from './get-report';
@@ -236,6 +237,7 @@ describe('alertas de Inicio', () => {
     );
     expect(await alerts.execute('2026-10-10')).toEqual({
       cardsDue: [],
+      cardsOverdue: [],
       cardsHighUse: [],
       overdue: ['Luz'],
       dueSoon: ['Internet'],
@@ -334,13 +336,30 @@ describe('cuentas y transferencias', () => {
     expect(banco.creditLimit).toBeNull();
   });
 
-  it('ajustar saldo cambia el inicial sin crear movimientos; borrar solo cuentas vacías', async () => {
+  it('ajustar saldo deja un ajuste visible que cuadra el saldo sin tocar el mes; borrarlo lo devuelve', async () => {
     const s = accountsSetup();
-    const banco = await s.save.execute({ name: 'Banco', type: 'banco', initialBalance: 0 });
-    await s.add.execute({ date: '2026-10-01', amount: 1_000, categoryId: 'com', accountId: banco.id });
-    await new AdjustAccountBalance(s.accounts).execute(banco.id, 20_000);
-    expect((await s.accounts.balances()).get(banco.id)).toBe(20_000);
-    expect(s.transactions.items.size).toBe(1);
+    const banco = await s.save.execute({ name: 'Banco', type: 'banco', initialBalance: 5_000 });
+    await s.add.execute({ date: '2026-10-01', amount: 30_000, categoryId: 'sal', accountId: banco.id });
+    await s.add.execute({ date: '2026-10-02', amount: 1_000, categoryId: 'com', accountId: banco.id });
+    const month = async () => (await new GetMonthHistory(s.transactions, s.categories, s.savings).execute('2026-10', 1))[0];
+    const before = await month();
+    const adjust = new AdjustAccountBalance(s.accounts, s.ids);
+
+    const up = await adjust.execute(banco.id, 40_000, '2026-10-20');
+    expect(up).toMatchObject({ amount: 6_000, toAccountId: banco.id });
+    expect(adjustmentOf(up!)).toEqual({ accountId: banco.id, amount: 6_000 });
+    const down = await adjust.execute(banco.id, 39_000, '2026-10-20');
+    expect(adjustmentOf(down!)).toEqual({ accountId: banco.id, amount: -1_000 });
+    expect(await adjust.execute(banco.id, 39_000, '2026-10-20')).toBeUndefined();
+
+    // Saldo = inicial + movimientos + ajustes; el inicial no cambia y el resumen del mes tampoco.
+    expect((await s.accounts.balances()).get(banco.id)).toBe(5_000 + 30_000 - 1_000 + 6_000 - 1_000);
+    expect((await s.accounts.get(banco.id))!.initialBalance).toBe(5_000);
+    expect(await month()).toEqual(before);
+    expect(s.transactions.items.size).toBe(2);
+
+    await new DeleteTransfer(s.accounts).execute(down!.id);
+    expect((await s.accounts.balances()).get(banco.id)).toBe(40_000);
 
     await expect(new DeleteAccount(s.accounts).execute(banco.id)).rejects.toThrow('Archívala');
     await expect(new DeleteAccount(s.accounts).execute('acc-efectivo')).rejects.toThrow(ValidationError);
@@ -406,6 +425,68 @@ describe('estado de tarjeta', () => {
       'antes 2026-11-04 40000',
       'hoy 2026-11-05 40000',
     ]);
+  });
+});
+
+describe('por pagar de tarjetas', () => {
+  async function cardsSetup() {
+    const s = setup();
+    const accounts = new InMemoryAccounts(s.transactions, s.categories);
+    const save = new SaveAccount(accounts, s.ids);
+    await new AdjustAccountBalance(accounts, s.ids).execute('acc-efectivo', 10_000);
+    const visa = await save.execute({ name: 'Visa', type: 'tarjeta', initialBalance: 0, creditLimit: 100_000, cutDay: 5, dueDay: 28 });
+    const add = new AddTransaction(s.transactions, s.categories, s.ids, accounts);
+    await add.execute({ date: '2026-10-02', amount: 4_000, categoryId: 'com', accountId: visa.id });
+    const overview = new GetAccountsOverview(accounts);
+    const toPay = new GetCardsToPay(overview, new GetCardStatuses(accounts, new InMemorySettings()));
+    const pay = (amount: number, from = 'acc-efectivo', to = visa.id) =>
+      new SaveTransfer(accounts, s.ids).execute({ date: '2026-10-20', amount, fromAccountId: from, toAccountId: to });
+    const after = async () => {
+      const [o, p] = await Promise.all([overview.execute(), toPay.execute('2026-10-20')]);
+      return { available: o.assets, toPay: p.total, after: o.assets - p.total };
+    };
+    return { s, accounts, save, add, visa, toPay, pay, after };
+  }
+
+  it('cuentas con 10,000 y tarjeta con 4,000: queda 6,000; pagar no cambia lo que queda', async () => {
+    const c = await cardsSetup();
+    expect(await c.after()).toEqual({ available: 10_000, toPay: 4_000, after: 6_000 });
+    expect((await c.toPay.execute('2026-10-20')).cards[0]).toMatchObject({ amount: 4_000, dueDate: '2026-10-28', daysToDue: 8 });
+    await c.pay(1_500);
+    expect(await c.after()).toEqual({ available: 8_500, toPay: 2_500, after: 6_000 });
+    await c.pay(2_500);
+    expect(await c.after()).toEqual({ available: 6_000, toPay: 0, after: 6_000 });
+    expect((await c.toPay.execute('2026-10-20')).cards).toEqual([]);
+  });
+
+  it('las compras después del corte van al próximo estado', async () => {
+    const c = await cardsSetup();
+    await c.add.execute({ date: '2026-10-10', amount: 3_000, categoryId: 'com', accountId: c.visa.id });
+    expect((await c.after()).toPay).toBe(4_000);
+  });
+
+  it('dos tarjetas, una sin corte configurado (cuenta toda su deuda) y el resultado puede quedar negativo', async () => {
+    const c = await cardsSetup();
+    await c.accounts.save({ id: 'mc', name: 'MC', type: 'tarjeta', initialBalance: -9_000, creditLimit: null, cutDay: null, dueDay: null, archived: false });
+    const result = await c.toPay.execute('2026-10-20');
+    expect(result.total).toBe(13_000);
+    expect(result.cards.find((x) => x.account.id === 'mc')).toMatchObject({ amount: 9_000, dueDate: null, daysToDue: null });
+    expect((await c.after()).after).toBe(-3_000);
+  });
+
+  it('una tarjeta archivada o sin deuda no suma', async () => {
+    const c = await cardsSetup();
+    await c.save.execute({ name: 'Sin deuda', type: 'tarjeta', initialBalance: 0, creditLimit: 1_000, cutDay: 1, dueDay: 20 });
+    await c.accounts.save({ id: 'vieja', name: 'Vieja', type: 'tarjeta', initialBalance: -7_000, creditLimit: null, cutDay: 1, dueDay: 20, archived: true });
+    expect((await c.toPay.execute('2026-10-20')).total).toBe(4_000);
+  });
+
+  it('si la fecha de pago ya pasó, la alerta dice vencida y no "vence pronto"', async () => {
+    const c = await cardsSetup();
+    const cards = new GetCardStatuses(c.accounts, new InMemorySettings());
+    const alerts = new GetAlerts(new GetUpcomingRecurring(new GetMonthRecurringExpenses(c.s.recurring)), new GetBudgetStatuses(c.s.budgets, c.s.transactions), c.s.categories, cards);
+    expect(await alerts.execute('2026-10-26')).toMatchObject({ cardsDue: ['Visa'], cardsOverdue: [] });
+    expect(await alerts.execute('2026-10-30')).toMatchObject({ cardsDue: [], cardsOverdue: ['Visa'] });
   });
 });
 

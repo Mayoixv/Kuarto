@@ -7,7 +7,7 @@ import { APP_CONTAINER } from '../../app.container';
 import { AccountView } from '../../application/use-cases/accounts';
 import { AccountType, CASH_ACCOUNT_ID, isCard } from '../../domain/account';
 import { CurrencyState } from '../currency-state';
-import { amountToInput, parseAmount, parseBalance } from '../format';
+import { amountToInput, parseAmount, parseBalance, todayIso } from '../format';
 import { SuccessCheckComponent } from '../success-check.component';
 import { ACCOUNT_TYPES, accountTypeLabel } from './account-choices';
 import { t, errorText } from '../i18n';
@@ -101,9 +101,9 @@ export class CuentaModalComponent implements OnInit {
     this.error.set(null);
     try {
       const account = await this.container.saveAccount.execute(fields, this.view?.account.id);
-      // Al editar, un saldo distinto del calculado se ajusta sin crear movimientos.
+      // Al editar, un saldo distinto del calculado queda como un ajuste visible en Movimientos (no es ingreso ni gasto).
       if (this.view && balance !== this.view.balance) {
-        await this.container.adjustAccountBalance.execute(account.id, balance);
+        await this.container.adjustAccountBalance.execute(account.id, balance, todayIso());
       }
       this.saved.set(true);
       await new Promise((resolve) => setTimeout(resolve, SUCCESS_VISIBLE_MS));

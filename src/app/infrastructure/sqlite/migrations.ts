@@ -308,6 +308,12 @@ export const MIGRATIONS: Migration[] = [
     // Si se borra la deuda, el fijo queda como un gasto fijo normal.
     statements: [`ALTER TABLE recurring_expenses ADD COLUMN debt_id TEXT REFERENCES debts(id) ON DELETE SET NULL`],
   },
+  {
+    version: 15,
+    name: 'cuenta interna para los ajustes de saldo',
+    // Los ajustes de antes cambiaron el saldo inicial y se quedan así: solo los nuevos dejan movimiento.
+    statements: [`INSERT OR IGNORE INTO accounts (id, name, type, archived) VALUES ('acc-ajuste', 'Ajuste', 'banco', 1)`],
+  },
 ];
 
 /** Aplica las migraciones pendientes en orden y devuelve las versiones aplicadas. */

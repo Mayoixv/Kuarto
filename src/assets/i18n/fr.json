@@ -464,7 +464,7 @@
     "accountPlaceholder": "Compte épargne, compte courant",
     "owedToday": "Ce que vous devez aujourd'hui ({currency})",
     "balanceToday": "Solde du jour ({currency})",
-    "adjustHint": "Si vous changez le solde, il est ajusté sans créer d'opération, donc il ne compte ni comme revenu ni comme dépense.",
+    "adjustHint": "Si vous changez le solde, un ajustement apparaît dans les opérations, sans compter comme revenu ni dépense.",
     "creditLimit": "Plafond de crédit ({currency})",
     "cutDay": "Jour d'arrêté",
     "payDay": "Jour de paiement",
@@ -549,7 +549,9 @@
     "available": "Disponible {amount}",
     "inGoals": "Dans les objectifs {amount}",
     "owedToMe": "On vous doit {amount}",
-    "owe": "Vous devez {amount}"
+    "owe": "Vous devez {amount}",
+    "cardsToPay": "À payer sur les cartes",
+    "afterCards": "Disponible après paiement des cartes"
   },
   "tabs": {
     "inicio": {
@@ -621,7 +623,11 @@
     },
     "exceeded": "Vous avez dépassé dans {names}",
     "near": "Proche du plafond : {names}",
-    "cardsUse": "Vous utilisez 30 % ou plus du plafond : {names}"
+    "cardsUse": "Vous utilisez 30 % ou plus du plafond : {names}",
+    "cardsOverdue": {
+      "one": "La carte {names} a un paiement en retard",
+      "other": "Les cartes {names} ont un paiement en retard"
+    }
   },
   "compare": {
     "title": "Mois par mois",
@@ -1222,6 +1228,11 @@
     "dbFailed": "Impossible d'ouvrir la base de données locale. Fermez et rouvrez l'appli.\n\nDétail : {detail}"
   },
   "changelog": {
+    "1_0_14": [
+      "L'accueil montre ce que vous devez payer sur vos cartes et ce qui reste disponible après les avoir payées.",
+      "Corriger le solde d'un compte laisse un « Ajustement » visible dans les opérations, que vous pouvez supprimer.",
+      "L'alerte de la carte indique « en retard » une fois la date de paiement passée."
+    ],
     "1_0_13": [
       "Bouton micro pour dicter : touchez le micro dans « Nouvelle opération », dites « dépensé 500 en essence » et le formulaire se remplit tout seul.",
       "Je peux me le permettre ? répond d'abord avec l'argent de ce mois, puis en dessous en comptant tout votre patrimoine."
@@ -1766,5 +1777,18 @@
     "listening": "Je vous écoute… dites-le comme à quelqu'un.",
     "noMic": "Pour dicter, Kuarto a besoin d'accéder au micro.",
     "failed": "Impossible d'utiliser le micro. Réessayez."
+  },
+  "cardsToPay": {
+    "title": "À payer sur les cartes",
+    "hint": "Ce qui reste à payer sur le dernier relevé de chaque carte pour éviter les intérêts. Les achats après la date d'arrêté vont au relevé suivant.",
+    "noCut": "Les jours d'arrêté et de paiement ne sont pas définis : toute la dette est comptée."
+  },
+  "adjust": {
+    "title": "Ajustement du solde",
+    "row": "Ajustement · {account}",
+    "open": "Voir l'ajustement du solde {name}, {amount}",
+    "detail": "{title} : {amount} le {date}. Il corrige le solde du compte et ne compte ni comme revenu ni comme dépense.",
+    "delete": "Supprimer l'ajustement",
+    "confirm": "Le solde du compte revient à ce qu'il était avant l'ajustement."
   }
 }

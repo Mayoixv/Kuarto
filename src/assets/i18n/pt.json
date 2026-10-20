@@ -464,7 +464,7 @@
     "accountPlaceholder": "Poupança, conta salário",
     "owedToday": "O que você deve hoje ({currency})",
     "balanceToday": "Saldo de hoje ({currency})",
-    "adjustHint": "Se você mudar o saldo, ele é ajustado sem criar um lançamento, então não conta como receita nem despesa.",
+    "adjustHint": "Se você mudar o saldo, aparece um ajuste nos lançamentos que não conta como receita nem despesa.",
     "creditLimit": "Limite de crédito ({currency})",
     "cutDay": "Dia de fechamento",
     "payDay": "Dia de pagamento",
@@ -549,7 +549,9 @@
     "available": "Disponível {amount}",
     "inGoals": "Em metas {amount}",
     "owedToMe": "Devem a você {amount}",
-    "owe": "Você deve {amount}"
+    "owe": "Você deve {amount}",
+    "cardsToPay": "A pagar dos cartões",
+    "afterCards": "Disponível depois de pagar os cartões"
   },
   "tabs": {
     "inicio": {
@@ -621,7 +623,11 @@
     },
     "exceeded": "Você passou do limite em {names}",
     "near": "Perto do limite: {names}",
-    "cardsUse": "Você usa 30% ou mais do limite: {names}"
+    "cardsUse": "Você usa 30% ou mais do limite: {names}",
+    "cardsOverdue": {
+      "one": "O cartão {names} tem um pagamento vencido",
+      "other": "Os cartões {names} têm um pagamento vencido"
+    }
   },
   "compare": {
     "title": "Mês a mês",
@@ -1222,6 +1228,11 @@
     "dbFailed": "Não foi possível abrir o banco de dados local. Feche e abra o app de novo.\n\nDetalhe: {detail}"
   },
   "changelog": {
+    "1_0_14": [
+      "No Início você vê quanto deve pagar dos cartões e quanto sobra disponível depois de pagá-los.",
+      "Ao corrigir o saldo de uma conta, fica um \"Ajuste\" visível nos lançamentos, que você pode apagar.",
+      "O aviso do cartão diz \"vencido\" quando a data de pagamento já passou."
+    ],
     "1_0_13": [
       "Botão de microfone para ditar: toque no microfone em \"Novo movimento\", diga \"gastei 500 em gasolina\" e o formulário se preenche sozinho.",
       "Dá para comprar? agora responde primeiro com o dinheiro deste mês e, abaixo, contando todo o seu patrimônio."
@@ -1767,5 +1778,18 @@
     "listening": "Estou ouvindo… fale como diria a alguém.",
     "noMic": "Para ditar, o Kuarto precisa de permissão para usar o microfone.",
     "failed": "Não foi possível usar o microfone. Tente de novo."
+  },
+  "cardsToPay": {
+    "title": "A pagar dos cartões",
+    "hint": "O que falta pagar da última fatura de cada cartão para não pagar juros. Compras depois do fechamento vão para a próxima fatura.",
+    "noCut": "Faltam os dias de fechamento e vencimento: conta-se toda a dívida."
+  },
+  "adjust": {
+    "title": "Ajuste de saldo",
+    "row": "Ajuste · {account}",
+    "open": "Ver ajuste de saldo {name}, {amount}",
+    "detail": "{title}: {amount} em {date}. Corrige o saldo da conta e não conta como receita nem gasto.",
+    "delete": "Apagar ajuste",
+    "confirm": "O saldo da conta volta ao que era antes do ajuste."
   }
 }

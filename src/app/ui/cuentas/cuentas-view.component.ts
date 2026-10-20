@@ -19,7 +19,8 @@ import {
   isCard,
   Transfer,
 } from '../../domain/account';
-import { DineroFormService } from '../dinero/dinero-form.service';
+import { adjustmentText, DineroFormService } from '../dinero/dinero-form.service';
+import { adjustmentOf } from '../../domain/account';
 import {
   amountToInput,
   currentMonth,
@@ -147,7 +148,15 @@ export class CuentasViewComponent {
 
   protected transferText(transfer: Transfer): string {
     const n = this.names();
+    const adjustment = adjustmentText(transfer, n);
+    if (adjustment) return adjustment.title;
     return `${n.get(transfer.fromAccountId) ?? t('cuentas.account')} → ${n.get(transfer.toAccountId) ?? t('cuentas.account')}`;
+  }
+
+  protected readonly isAdjustment = (transfer: Transfer) => !!adjustmentOf(transfer);
+
+  protected transferAmount(transfer: Transfer): string {
+    return adjustmentText(transfer, this.names())?.amount ?? formatMoney(transfer.amount);
   }
 
   protected openAccount(view: AccountView) {

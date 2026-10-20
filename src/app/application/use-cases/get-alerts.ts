@@ -18,8 +18,10 @@ export interface Alerts {
   exceeded: string[];
   /** Presupuestos desde el 85% sin pasarse. */
   nearLimit: string[];
-  /** Tarjetas con pago pendiente que vence en 3 días o menos, o ya venció. */
+  /** Tarjetas con pago pendiente que vence de hoy a 3 días. */
   cardsDue: string[];
+  /** Tarjetas con pago pendiente cuya fecha límite ya pasó. */
+  cardsOverdue: string[];
   /** Tarjetas que usan el 30% del límite o más. */
   cardsHighUse: string[];
 }
@@ -52,7 +54,8 @@ export class GetAlerts {
       dueSoon: payments.filter((i) => daysBetween(today, i.instance.dueDate) >= 0).map((i) => i.expense.name),
       exceeded: budgetNames('exceeded'),
       nearLimit: budgetNames('warning'),
-      cardsDue: cards.filter((c) => c.pending > 0 && c.daysToDue <= DUE_SOON_DAYS).map((c) => c.account.name),
+      cardsDue: cards.filter((c) => c.pending > 0 && c.daysToDue >= 0 && c.daysToDue <= DUE_SOON_DAYS).map((c) => c.account.name),
+      cardsOverdue: cards.filter((c) => c.pending > 0 && c.daysToDue < 0).map((c) => c.account.name),
       cardsHighUse: cards
         .filter((c) => (c.utilization ?? 0) >= CARD_UTILIZATION_WARNING)
         .map((c) => c.account.name),

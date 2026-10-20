@@ -19,3 +19,14 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Kuarto: los plugins de Capacitor se llaman por nombre desde la parte web y algunos usan reflexión o JNI
+# (SQLCipher). Se conservan enteros: su código ya es público, así que ofuscarlo no aporta y romperlo sí cuesta.
+-keep class com.getcapacitor.** { *; }
+-keep class com.capacitorjs.plugins.** { *; }
+-keep class com.aparajita.capacitor.** { *; }
+-keep class io.capawesome.capacitorjs.plugins.** { *; }
+-keep class net.zetetic.** { *; }
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+# El plugin de Firebase trae inicio de sesión con Facebook, que Kuarto no usa ni incluye.
+-dontwarn com.facebook.**

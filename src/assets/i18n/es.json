@@ -461,7 +461,7 @@
     "accountPlaceholder": "Cuenta de ahorro, nómina",
     "owedToday": "Lo que debes hoy ({currency})",
     "balanceToday": "Saldo de hoy ({currency})",
-    "adjustHint": "Si cambias el saldo, se ajusta sin crear un movimiento, así que no cuenta como ingreso ni como gasto.",
+    "adjustHint": "Si cambias el saldo, queda un ajuste en Movimientos que no cuenta como ingreso ni como gasto.",
     "creditLimit": "Límite de crédito ({currency})",
     "cutDay": "Día de corte",
     "payDay": "Día de pago",
@@ -546,7 +546,9 @@
     "available": "Disponible {amount}",
     "inGoals": "En metas {amount}",
     "owedToMe": "Te deben {amount}",
-    "owe": "Debes {amount}"
+    "owe": "Debes {amount}",
+    "cardsToPay": "Por pagar de tarjetas",
+    "afterCards": "Disponible después de pagar tarjetas"
   },
   "tabs": {
     "inicio": {
@@ -618,7 +620,11 @@
     },
     "exceeded": "Te pasaste en {names}",
     "near": "Cerca del límite: {names}",
-    "cardsUse": "Usas el 30% o más del límite: {names}"
+    "cardsUse": "Usas el 30% o más del límite: {names}",
+    "cardsOverdue": {
+      "one": "La tarjeta {names} tiene un pago vencido",
+      "other": "Las tarjetas {names} tienen un pago vencido"
+    }
   },
   "compare": {
     "title": "Mes a mes",
@@ -1219,6 +1225,11 @@
     "dbFailed": "No se pudo abrir la base de datos local. Cierra y vuelve a abrir la aplicación.\n\nDetalle: {detail}"
   },
   "changelog": {
+    "1_0_14": [
+      "En Inicio ves cuánto debes pagar de tus tarjetas y cuánto te queda disponible después de pagarlas.",
+      "Al corregir el saldo de una cuenta queda un \"Ajuste\" visible en Movimientos, que puedes borrar.",
+      "El aviso de la tarjeta dice \"vencido\" cuando la fecha de pago ya pasó."
+    ],
     "1_0_13": [
       "Botón de micrófono para dictar: toca el micrófono en \"Nuevo movimiento\", di \"gasté 500 en gasolina\" y el formulario se llena solo.",
       "¿Me alcanza? ahora responde primero con el dinero de este mes y, más abajo, contando todo tu patrimonio."
@@ -1757,5 +1768,18 @@
     "listening": "Te escucho… dilo como se lo dirías a alguien.",
     "noMic": "Para dictar, Kuarto necesita permiso para usar el micrófono.",
     "failed": "No se pudo usar el micrófono. Inténtalo de nuevo."
+  },
+  "cardsToPay": {
+    "title": "Por pagar de tarjetas",
+    "hint": "Lo que falta pagar del último estado de cada tarjeta para no pagar intereses. Las compras después del corte van al próximo estado.",
+    "noCut": "Falta configurar el día de corte y de pago: se cuenta toda la deuda."
+  },
+  "adjust": {
+    "title": "Ajuste de saldo",
+    "row": "Ajuste · {account}",
+    "open": "Ver ajuste de saldo {name}, {amount}",
+    "detail": "{title}: {amount} el {date}. Corrige el saldo de la cuenta y no cuenta como ingreso ni gasto.",
+    "delete": "Borrar ajuste",
+    "confirm": "El saldo de la cuenta vuelve a como estaba antes del ajuste."
   }
 }

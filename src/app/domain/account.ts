@@ -6,6 +6,19 @@ export type AccountType = 'efectivo' | 'banco' | 'ahorro' | 'tarjeta' | 'inversi
 /** Cuenta que crea la migración; los movimientos de antes de existir las cuentas quedan en ella. */
 export const CASH_ACCOUNT_ID = 'acc-efectivo';
 
+/**
+ * Cuenta interna, oculta en todas las listas: un ajuste de saldo es una transferencia entre ella y la cuenta ajustada.
+ * Así sube o baja el saldo sin contar como ingreso ni gasto, igual que el pago de una tarjeta.
+ */
+export const ADJUST_ACCOUNT_ID = 'acc-ajuste';
+
+/** Si la transferencia es un ajuste de saldo: la cuenta ajustada y la diferencia con signo. */
+export function adjustmentOf(t: Transfer): { accountId: string; amount: number } | null {
+  if (t.toAccountId === ADJUST_ACCOUNT_ID) return { accountId: t.fromAccountId, amount: -t.amount };
+  if (t.fromAccountId === ADJUST_ACCOUNT_ID) return { accountId: t.toAccountId, amount: t.amount };
+  return null;
+}
+
 export interface Account {
   id: string;
   name: string;

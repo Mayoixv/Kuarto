@@ -120,14 +120,14 @@
           <button
             type="button"
             class="row"
-            [attr.aria-label]="t('cuentas.editTransfer', { amount: money(tr.amount), text: transferText(tr) })"
+            [attr.aria-label]="isAdjustment(tr) ? t('adjust.open', { name: transferText(tr), amount: transferAmount(tr) }) : t('cuentas.editTransfer', { amount: transferAmount(tr), text: transferText(tr) })"
             (click)="forms.editTransfer(tr)"
           >
             <span class="row-text">
               <span class="row-title">{{ transferText(tr) }}</span>
               <span class="row-sub">{{ day(tr.date) }}{{ tr.note ? ' · ' + tr.note : '' }}</span>
             </span>
-            <span class="row-amount">{{ money(tr.amount) }}</span>
+            <span class="row-amount">{{ transferAmount(tr) }}</span>
           </button>
         </li>
       }

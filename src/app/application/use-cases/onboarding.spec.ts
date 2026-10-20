@@ -37,7 +37,7 @@ describe('preguntas iniciales', () => {
       profile,
       new CurrencySettings(settings),
       new SaveAccount(accounts, ids),
-      new AdjustAccountBalance(accounts),
+      new AdjustAccountBalance(accounts, ids),
       new AddRecurringExpenses(recurring, categories, ids),
       new SaveDebt(debts, ids),
       new AddDebtAsFixed(new GetDebtsOverview(debts, recurring), recurring, categories, ids),

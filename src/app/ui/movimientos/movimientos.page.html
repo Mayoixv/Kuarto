@@ -213,8 +213,8 @@
       <ul [class.t-still]="!monthState.animateLists()" class="rows">
         @for (tr of visibleTransfers(); track tr.transfer.id) {
           <li animate.enter="t-row-enter" animate.leave="t-row-leave" class="item">
-            <button type="button" class="row" [attr.aria-label]="t('movs.editTransfer', { name: tr.title, amount: tr.amount })" (click)="editTransfer(tr.transfer)">
-              <span class="avatar transfer" aria-hidden="true"><ion-icon name="swap-horizontal"></ion-icon></span>
+            <button type="button" class="row" [attr.aria-label]="tr.adjustment ? t('adjust.open', { name: tr.title, amount: tr.amount }) : t('movs.editTransfer', { name: tr.title, amount: tr.amount })" (click)="editTransfer(tr.transfer)">
+              <span class="avatar transfer" aria-hidden="true"><ion-icon [name]="tr.adjustment ? 'create-outline' : 'swap-horizontal'"></ion-icon></span>
               <span class="row-text">
                 <span class="row-title">{{ tr.title }}</span>
                 <span class="row-sub">{{ tr.sub }}</span>

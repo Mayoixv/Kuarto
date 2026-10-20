@@ -1,4 +1,4 @@
-import { Account, AccountType, CASH_ACCOUNT_ID, dueDateAfter, isCard, lastCutDate, Transfer } from '../../domain/account';
+import { Account, AccountType, ADJUST_ACCOUNT_ID, CASH_ACCOUNT_ID, dueDateAfter, isCard, lastCutDate, Transfer } from '../../domain/account';
 import { isValidCents } from '../../domain/money';
 import { daysBetween, IsoDate, isValidIsoDate } from '../../domain/month';
 import { DebtDirection } from '../../domain/debts';
@@ -89,18 +89,38 @@ export class DeleteAccount {
 }
 
 export class AdjustAccountBalance {
-  constructor(private readonly accounts: IAccountRepository) {}
+  constructor(
+    private readonly accounts: IAccountRepository,
+    private readonly ids: IdGenerator,
+  ) {}
 
   /**
-   * Hace que el saldo calculado sea el real cambiando el saldo inicial. No crea un movimiento:
-   * así el ajuste no se cuenta como ingreso ni gasto del mes.
+   * Hace que el saldo calculado sea el real. Con `date` deja el ajuste como una transferencia con la cuenta interna
+   * de ajustes (se ve en Movimientos y no cuenta como ingreso ni gasto). Sin fecha, al crear la cuenta en la
+   * bienvenida, cambia el saldo inicial.
    */
-  async execute(id: string, realBalance: number): Promise<void> {
+  async execute(id: string, realBalance: number, date?: IsoDate): Promise<Transfer | undefined> {
     if (!Number.isInteger(realBalance)) throw new ValidationError('balance');
+    if (date !== undefined && !isValidIsoDate(date)) throw new ValidationError('date');
     const account = await this.accounts.get(id);
-    if (!account) throw new NotFoundError('account');
+    if (!account || id === ADJUST_ACCOUNT_ID) throw new NotFoundError('account');
     const current = (await this.accounts.balances()).get(id) ?? account.initialBalance;
-    await this.accounts.save({ ...account, initialBalance: account.initialBalance + (realBalance - current) });
+    const diff = realBalance - current;
+    if (diff === 0) return undefined;
+    if (date === undefined) {
+      await this.accounts.save({ ...account, initialBalance: account.initialBalance + diff });
+      return undefined;
+    }
+    const transfer: Transfer = {
+      id: this.ids.next(),
+      date,
+      amount: Math.abs(diff),
+      fromAccountId: diff > 0 ? ADJUST_ACCOUNT_ID : id,
+      toAccountId: diff > 0 ? id : ADJUST_ACCOUNT_ID,
+      note: '',
+    };
+    await this.accounts.saveTransfer(transfer);
+    return transfer;
   }
 }
 
@@ -259,6 +279,46 @@ export class GetCardStatuses {
       });
     }
     return out;
+  }
+}
+
+export interface CardToPay {
+  account: Account;
+  /** Lo que falta pagar del último estado; sin corte configurado, toda la deuda. */
+  amount: number;
+  /** null si la tarjeta no tiene días de corte y pago. */
+  dueDate: IsoDate | null;
+  daysToDue: number | null;
+}
+
+export interface CardsToPay {
+  total: number;
+  cards: CardToPay[];
+}
+
+/**
+ * Lo que hay que pagar de las tarjetas activas: lo pendiente del último estado (las compras después del corte van al
+ * próximo). Al pagar, esto baja lo mismo que baja el disponible, así que "disponible − por pagar" no cambia.
+ */
+export class GetCardsToPay {
+  constructor(
+    private readonly accounts: GetAccountsOverview,
+    private readonly statuses: GetCardStatuses,
+  ) {}
+
+  async execute(today: IsoDate): Promise<CardsToPay> {
+    const [overview, statuses] = await Promise.all([this.accounts.execute(), this.statuses.execute(today)]);
+    const byId = new Map(statuses.map((s) => [s.account.id, s]));
+    const cards = overview.accounts
+      .filter((v) => isCard(v.account) && !v.account.archived)
+      .map((v): CardToPay => {
+        const s = byId.get(v.account.id);
+        return s
+          ? { account: v.account, amount: s.pending, dueDate: s.dueDate, daysToDue: s.daysToDue }
+          : { account: v.account, amount: Math.max(0, -v.balance), dueDate: null, daysToDue: null };
+      })
+      .filter((c) => c.amount > 0);
+    return { total: cards.reduce((s, c) => s + c.amount, 0), cards };
   }
 }
 
