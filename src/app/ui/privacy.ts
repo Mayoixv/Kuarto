@@ -6,8 +6,9 @@ const KEY = 'privacy_screen';
 
 export const privacyAvailable = Capacitor.isNativePlatform();
 
+/** Activada salvo que se haya apagado: la migración 16 deja '0' a quien ya usaba la app sin tocarla. */
 export async function isPrivacyOn(settings: ISettingsRepository): Promise<boolean> {
-  return (await settings.get(KEY)) === '1';
+  return (await settings.get(KEY)) !== '0';
 }
 
 /**

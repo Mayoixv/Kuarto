@@ -27,6 +27,7 @@
 -keep class com.aparajita.capacitor.** { *; }
 -keep class io.capawesome.capacitorjs.plugins.** { *; }
 -keep class net.zetetic.** { *; }
+-keep class com.mayoixv.finanzas.** { *; }
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 # El plugin de Firebase trae inicio de sesión con Facebook, que Kuarto no usa ni incluye.
 -dontwarn com.facebook.**

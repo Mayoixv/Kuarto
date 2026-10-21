@@ -49,16 +49,6 @@ export function pickFile(accept = ''): Promise<File | null> {
   });
 }
 
-/**
- * Como pickFile, pero devuelve el texto del archivo.
- * Sin `accept`, se puede elegir cualquier archivo: Android no conoce la extensión .finanzas y, si se filtra por
- * ella, deja todos los archivos en gris. Quien llama comprueba el contenido.
- */
-export async function pickTextFile(accept = ''): Promise<string | null> {
-  const file = await pickFile(accept);
-  return file ? file.text().catch(() => null) : null;
-}
-
 /** Fecha de hoy para nombres de archivo: finanzas-respaldo-2026-10-05. */
 export function fileDate(): string {
   const d = new Date();

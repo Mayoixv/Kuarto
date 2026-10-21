@@ -37,7 +37,8 @@ export class CapacitorSqliteDatabase implements SqlDatabase {
     const conn = exists
       ? await sqlite.retrieveConnection(name, false)
       : await sqlite.createConnection(name, false, 'no-encryption', 1, false);
-    await conn.open();
+    // Si el WebView se recargó, el plugin nativo puede seguir con la base abierta: abrirla otra vez falla.
+    if (!(await conn.isDBOpen()).result) await conn.open();
     await conn.execute('PRAGMA foreign_keys = ON;', false);
     return new CapacitorSqliteDatabase(conn);
   }

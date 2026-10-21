@@ -41,6 +41,7 @@ Para revisar solo lee la lista de versiones de GitHub: no envía ningún dato tu
 - **Respaldo en la nube** (opcional): entras con Google y el respaldo semanal se sube cifrado con tu contraseña a Firebase. Nadie puede leerlo sin esa contraseña.
 - Para pasar tus datos a otro teléfono: instala Kuarto y usa **Restaurar respaldo** con el archivo, o **Restaurar desde la nube**.
 - Android no copia la app por su cuenta a tu cuenta de Google: los únicos respaldos son los de Kuarto.
+- Al restaurar un respaldo, el respaldo automático queda apagado hasta que vuelvas a poner su contraseña (la contraseña no viaja dentro del respaldo).
 - Si borras la app sin un respaldo, tus datos se pierden: nadie más tiene una copia.
 
 ## Desarrollo
@@ -61,7 +62,11 @@ Los textos de la interfaz están en `src/assets/i18n/<idioma>.json` (el español
 
 Para leer y crear archivos de Excel se usa SheetJS, instalado desde su fuente oficial: el paquete está en `vendor/xlsx-0.20.3.tgz` (el de npm está desactualizado).
 
-El respaldo en la nube usa Firebase (Authentication con Google y Firestore). Para compilarlo necesitas el `google-services.json` de tu proyecto en `android/app/` (no está en el repositorio).
+El respaldo en la nube usa Firebase (Authentication con Google y Firestore). Para compilarlo necesitas el `google-services.json` de tu proyecto en `android/app/` (no está en el repositorio). Las reglas de Firestore están en `firestore.rules` (cada cuenta solo lee y escribe sus respaldos); se publican con `firebase deploy --only firestore:rules`.
+
+`npm audit` marca avisos altos en `@grpc/grpc-js`, que llega por `firebase`. No aplican al APK: `@grpc/grpc-js` solo corre en Node y no entra en `www/`. El SDK web de Firebase sí entra, pero solo lo cargan los plugins `@capacitor-firebase/*` en el navegador; en Android usan el SDK nativo. No se puede quitar `firebase` porque esos plugins lo importan al compilar. El CI solo frena con un aviso crítico.
+
+La contraseña del respaldo automático se guarda en el almacenamiento seguro de Android (`@aparajita/capacitor-secure-storage`, con el Keystore), no en la base: ni los respaldos ni las copias previas la llevan.
 
 Necesitas Node 22.5 o más nuevo (las pruebas usan `node:sqlite`) y, para Android, JDK 21 y el SDK de Android.
 

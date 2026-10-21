@@ -28,6 +28,16 @@ export function releaseVersion(text: string): string | null {
   return /\d+(?:\.\d+)+/.exec(text)?.[0] ?? null;
 }
 
+/** La descarga solo puede venir de github.com por https; el plugin nativo vuelve a comprobarlo en cada redirección. */
+export function fromGitHub(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && u.hostname === 'github.com';
+  } catch {
+    return false;
+  }
+}
+
 /** true si `a` (por ejemplo "1.0.10") es más nueva que `b` ("1.0.9"). */
 export function isNewer(a: string, b: string): boolean {
   const pa = a.split('.').map(Number);
@@ -92,7 +102,7 @@ export class UpdateService {
     const apk = data.assets.find((a) => a.name.endsWith('.apk'));
     // El número sale del nombre del APK (Kuarto-1.0.5.apk) o, si no lo trae, de la etiqueta (v1.0.5).
     const version = releaseVersion(apk?.name ?? '') ?? releaseVersion(data.tag_name);
-    return apk && version ? { version, url: apk.browser_download_url } : null;
+    return apk && version && fromGitHub(apk.browser_download_url) ? { version, url: apk.browser_download_url } : null;
   }
 
   private async offer(release: AppRelease) {

@@ -31,6 +31,7 @@ async function render(withData: boolean) {
     backup: { dump: () => Promise.reject(), restore: () => Promise.reject(), wipe: () => Promise.reject() },
     debts: new InMemoryDebts(),
     accounts: new InMemoryAccounts(transactions, categories),
+    secrets: new InMemorySettings(),
   };
   repos.categories.items.set('sal', { id: 'sal', name: 'Salario', type: 'ingreso' });
   repos.categories.items.set('com', { id: 'com', name: 'Comida', type: 'variable' });

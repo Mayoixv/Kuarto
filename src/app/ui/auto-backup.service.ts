@@ -14,6 +14,8 @@ export class AutoBackupService {
 
   readonly available = Capacitor.isNativePlatform();
   readonly enabled = signal(false);
+  /** Venía activado en un respaldo de otro teléfono: hay que volver a poner la contraseña. */
+  readonly needsPassword = signal(false);
   /** Fecha ISO del último respaldo automático guardado. */
   readonly lastRun = signal<string | null>(null);
   readonly lastError = signal(false);
@@ -28,6 +30,7 @@ export class AutoBackupService {
 
   async refresh(): Promise<void> {
     this.enabled.set(await this.container.autoBackup.isEnabled());
+    this.needsPassword.set(await this.container.autoBackup.needsPassword());
     this.lastRun.set(await this.container.autoBackup.lastRun());
     this.frequency.set(await this.container.autoBackup.frequency());
     this.keep.set(await this.container.autoBackup.keep());

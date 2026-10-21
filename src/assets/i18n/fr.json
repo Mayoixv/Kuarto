@@ -4,6 +4,7 @@
   },
   "errors": {
     "notBackup": "Ce fichier n'est pas une sauvegarde de cette appli",
+    "backupTooBig": "Le fichier dépasse {mb} Mo : ce n'est pas une sauvegarde de cette appli",
     "wrongPassword": "Mot de passe incorrect ou fichier endommagé",
     "accountName": "Saisissez un nom pour le compte",
     "accountType": "Type de compte non valide",
@@ -122,6 +123,7 @@
     "createBackupSub": "Fichier chiffré avec mot de passe à garder hors du téléphone",
     "autoBackup": "Sauvegarde automatique",
     "autoOff": "Chiffrée, chaque jour ou chaque semaine, dans Documents/Kuarto du téléphone",
+    "autoNeedsPassword": "Désactivée lors de la restauration : activez-la et saisissez à nouveau le mot de passe",
     "autoError": "La dernière n'a pas pu être enregistrée ; nouvel essai à l'ouverture de l'appli",
     "autoLast": "Dernière : {date} · Documents/Kuarto",
     "autoPending": "En attente ; elle se fait à l'ouverture de l'appli",
@@ -1228,6 +1230,11 @@
     "dbFailed": "Impossible d'ouvrir la base de données locale. Fermez et rouvrez l'appli.\n\nDétail : {detail}"
   },
   "changelog": {
+    "1_0_15": [
+      "Sur les nouvelles installations, « Masquer dans les applis récentes » est activé : personne ne voit vos soldes dans les applis récentes et les captures d'écran sont bloquées. À changer dans Réglages › Sécurité et confidentialité.",
+      "Le mot de passe de la sauvegarde automatique est désormais gardé dans le stockage sécurisé d'Android et ne voyage plus dans les sauvegardes. Après une restauration, saisissez-le à nouveau.",
+      "Plus de protection à l'ouverture des sauvegardes et au téléchargement des mises à jour."
+    ],
     "1_0_14": [
       "L'accueil montre ce que vous devez payer sur vos cartes et ce qui reste disponible après les avoir payées.",
       "Corriger le solde d'un compte laisse un « Ajustement » visible dans les opérations, que vous pouvez supprimer.",

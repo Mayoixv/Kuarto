@@ -25,6 +25,24 @@ const TABLES = [
 
 type Row = Record<string, string | number | null>;
 
+/** La contraseña del respaldo automático no viaja en respaldos ni copias (va en el almacenamiento seguro). */
+const SECRET_SETTING = 'auto_backup_password';
+
+/**
+ * Respaldos de hasta la 1.0.14 traen la contraseña en `settings`: se descarta y el respaldo automático queda
+ * "activado sin contraseña", para que la app la pida en vez de reactivarlo solo en otro teléfono.
+ */
+function withoutSecret(data: BackupData): BackupData {
+  const rows = data.tables['settings'];
+  if (!rows) return data;
+  const hadPassword = rows.some((r) => r['key'] === SECRET_SETTING && r['value']);
+  const settings = rows.filter((r) => r['key'] !== SECRET_SETTING);
+  if (hadPassword && !settings.some((r) => r['key'] === 'auto_backup_enabled')) {
+    settings.push({ key: 'auto_backup_enabled', value: '1' });
+  }
+  return { ...data, tables: { ...data.tables, settings } };
+}
+
 export class SqliteBackupStore implements IBackupStore {
   constructor(
     private readonly db: SqlDatabase,
@@ -37,7 +55,8 @@ export class SqliteBackupStore implements IBackupStore {
     );
     const tables: BackupData['tables'] = {};
     for (const table of await this.existingTables()) {
-      tables[table] = await this.db.all<Row>(`SELECT * FROM ${table}`);
+      const rows = await this.db.all<Row>(`SELECT * FROM ${table}`);
+      tables[table] = table === 'settings' ? rows.filter((r) => r['key'] !== SECRET_SETTING) : rows;
     }
     return { schemaVersion: version, tables };
   }
@@ -49,7 +68,7 @@ export class SqliteBackupStore implements IBackupStore {
     }
     const before = await this.dump();
     try {
-      await this.replaceWith(data);
+      await this.replaceWith(withoutSecret(data));
     } catch (error) {
       // Si el respaldo no entra (datos inválidos), se vuelve a lo que había: nunca queda la base a medias.
       await this.replaceWith(before);

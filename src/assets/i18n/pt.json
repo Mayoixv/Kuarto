@@ -4,6 +4,7 @@
   },
   "errors": {
     "notBackup": "Este arquivo não é um backup deste app",
+    "backupTooBig": "O arquivo tem mais de {mb} MB: não é um backup deste app",
     "wrongPassword": "Senha incorreta ou arquivo danificado",
     "accountName": "Digite um nome para a conta",
     "accountType": "Tipo de conta inválido",
@@ -122,6 +123,7 @@
     "createBackupSub": "Arquivo criptografado com senha para guardar fora do celular",
     "autoBackup": "Backup automático",
     "autoOff": "Criptografado, todo dia ou toda semana, em Documentos/Kuarto do celular",
+    "autoNeedsPassword": "Desativado ao restaurar o backup: ative e digite a senha de novo",
     "autoError": "Não foi possível salvar o último; tenta de novo ao abrir o app",
     "autoLast": "Último: {date} · Documentos/Kuarto",
     "autoPending": "Pendente; é feito ao abrir o app",
@@ -1228,6 +1230,11 @@
     "dbFailed": "Não foi possível abrir o banco de dados local. Feche e abra o app de novo.\n\nDetalhe: {detail}"
   },
   "changelog": {
+    "1_0_15": [
+      "Em instalações novas, \"Ocultar nos recentes\" vem ativado: ninguém vê seus saldos na lista de apps recentes e não dá para tirar capturas de tela. Mude em Ajustes › Segurança e privacidade.",
+      "A senha do backup automático agora fica no armazenamento seguro do Android e não vai mais dentro dos backups. Se restaurar um backup, digite-a de novo.",
+      "Mais proteção ao abrir backups e baixar atualizações."
+    ],
     "1_0_14": [
       "No Início você vê quanto deve pagar dos cartões e quanto sobra disponível depois de pagá-los.",
       "Ao corrigir o saldo de uma conta, fica um \"Ajuste\" visível nos lançamentos, que você pode apagar.",

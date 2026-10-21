@@ -15,7 +15,8 @@ import { AppError } from '../../application/errors';
 import { AUTO_BACKUP_KEEP_OPTIONS, AutoBackupFrequency, WIPE_CONFIRMATION } from '../../application/use-cases/backup';
 import { saveSafetyCopy } from '../backup-files';
 import { todayIso } from '../format';
-import { fileDate, pickTextFile, saveFile } from '../file-io';
+import { fileDate, pickFile, saveFile } from '../file-io';
+import { MAX_BACKUP_BYTES } from '../../application/backup-crypto';
 import { monthLabel } from '../format';
 import { LockState } from '../lock/lock-state';
 import { t, errorText } from '../i18n';
@@ -57,6 +58,7 @@ export class DatosComponent implements OnInit {
   private readonly autoToggle = viewChild<IonToggle>('autoToggle');
   protected readonly autoBackupDetail = computed(() => {
     if (!this.autoBackup.available) return t('common.phoneOnly');
+    if (this.autoBackup.needsPassword()) return t('datos.autoNeedsPassword');
     if (!this.autoBackup.enabled()) return t('datos.autoOff');
     if (this.autoBackup.lastError()) return t('datos.autoError');
     const last = this.autoBackup.lastRun();
@@ -154,6 +156,8 @@ export class DatosComponent implements OnInit {
     if (!values) return;
     const done = await this.busy(t('datos.wiping'), async () => {
       await this.container.wipeAllData.execute(values['w']);
+      // La contraseña del respaldo automático vive fuera de la base: también se borra.
+      await this.container.autoBackup.disable();
       // Ya sin datos: que no quede ningún aviso programado ni la pantalla protegida.
       if (this.notifications.available) await this.notifications.disable();
       await applyPrivacy(false);
@@ -164,7 +168,11 @@ export class DatosComponent implements OnInit {
   }
 
   protected async restoreBackup() {
-    const text = await pickTextFile();
+    // Sin `accept`: Android no conoce la extensión .finanzas y, si se filtra por ella, deja todo en gris.
+    const file = await pickFile();
+    if (!file) return;
+    if (file.size > MAX_BACKUP_BYTES) return this.fail(t('errors.backupTooBig', { mb: MAX_BACKUP_BYTES / 1024 / 1024 }));
+    const text = await file.text().catch(() => null);
     if (text) await this.restoreFromText(text);
   }
 

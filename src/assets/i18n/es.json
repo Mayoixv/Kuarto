@@ -1,6 +1,7 @@
 {
   "errors": {
     "notBackup": "El archivo no es un respaldo de esta app",
+    "backupTooBig": "El archivo pesa más de {mb} MB: no es un respaldo de esta app",
     "wrongPassword": "Contraseña incorrecta o archivo dañado",
     "accountName": "Escribe un nombre para la cuenta",
     "accountType": "Tipo de cuenta inválido",
@@ -119,6 +120,7 @@
     "createBackupSub": "Un archivo protegido con contraseña que puedes guardar fuera del teléfono",
     "autoBackup": "Respaldo automático",
     "autoOff": "Se guarda cifrado en Documentos/Kuarto, cada día o cada semana",
+    "autoNeedsPassword": "Se apagó al restaurar el respaldo: actívalo y vuelve a poner la contraseña",
     "autoError": "El último no se pudo guardar; se intentará de nuevo al abrir la app",
     "autoLast": "Último: {date} · Documentos/Kuarto",
     "autoPending": "Se hará la próxima vez que abras la app",
@@ -1225,6 +1227,11 @@
     "dbFailed": "No se pudo abrir la base de datos local. Cierra y vuelve a abrir la aplicación.\n\nDetalle: {detail}"
   },
   "changelog": {
+    "1_0_15": [
+      "En instalaciones nuevas, \"Ocultar en recientes\" viene activado: nadie ve tus saldos en la lista de apps recientes y no se pueden hacer capturas de pantalla. Lo cambias en Ajustes › Seguridad y privacidad.",
+      "La contraseña del respaldo automático ahora se guarda en el almacenamiento seguro de Android y ya no viaja dentro de los respaldos. Si restauras un respaldo, vuelve a ponerla.",
+      "Más protección al abrir respaldos y al descargar actualizaciones."
+    ],
     "1_0_14": [
       "En Inicio ves cuánto debes pagar de tus tarjetas y cuánto te queda disponible después de pagarlas.",
       "Al corregir el saldo de una cuenta queda un \"Ajuste\" visible en Movimientos, que puedes borrar.",

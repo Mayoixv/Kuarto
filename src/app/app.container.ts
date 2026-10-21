@@ -86,6 +86,7 @@ import {
   SqliteSettingsRepository,
   SqliteTransactionRepository,
 } from './infrastructure/repositories/sqlite-repositories';
+import { SecureSecrets } from './infrastructure/secure-secrets';
 import { SqliteBackupStore } from './infrastructure/sqlite/sqlite-backup-store';
 import { CapacitorSqliteDatabase } from './infrastructure/sqlite/capacitor-sqlite-database';
 import { runMigrations } from './infrastructure/sqlite/migrations';
@@ -100,6 +101,8 @@ export interface Repositories {
   backup: IBackupStore;
   debts: IDebtRepository;
   accounts: IAccountRepository;
+  /** Contraseñas que no deben quedar en la base (la del respaldo automático). */
+  secrets: ISettingsRepository;
 }
 
 /** Raíz de composición: une repositorios y casos de uso. La UI solo ve esto. */
@@ -250,7 +253,7 @@ export function buildContainer(repos: Repositories, ids: IdGenerator = uuidGener
     openBackup: new OpenBackup(),
     restoreBackup: new RestoreBackup(repos.backup),
     wipeAllData: new WipeAllData(repos.backup),
-    autoBackup: new AutoBackup(repos.settings, createBackup),
+    autoBackup: new AutoBackup(repos.settings, createBackup, repos.secrets),
     accounts: repos.accounts,
     saveAccount,
     archiveAccount: new ArchiveAccount(repos.accounts),
@@ -308,7 +311,7 @@ export async function createSqliteContainer(
   // Si guardar la copia falla, se actualiza igual: sin actualizar, la app no podría abrir.
   if (copy) await saveSafetyCopy(copy).catch((e) => console.error('No se pudo guardar la copia previa', e));
   await runMigrations(db);
-  return buildContainer({
+  const container = buildContainer({
     categories: new SqliteCategoryRepository(db),
     transactions: new SqliteTransactionRepository(db),
     recurring: new SqliteRecurringExpenseRepository(db),
@@ -318,5 +321,8 @@ export async function createSqliteContainer(
     backup,
     debts: new SqliteDebtRepository(db),
     accounts: new SqliteAccountRepository(db),
+    secrets: new SecureSecrets(),
   });
+  await container.autoBackup.migrateLegacyPassword();
+  return container;
 }

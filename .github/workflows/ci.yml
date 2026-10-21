@@ -19,6 +19,10 @@ jobs:
           cache: npm
 
       - run: npm ci
+      # Los avisos "high" de @grpc/grpc-js no aplican al APK (ver README); solo frena uno crítico.
+      - run: npm audit --omit=dev --audit-level=critical
+      - name: Android no copia los datos de la app a la nube de Google
+        run: grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml
       - run: npx ng lint
       - run: npx ng test --no-watch
       - run: npx ng build

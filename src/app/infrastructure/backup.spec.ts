@@ -1,4 +1,5 @@
 import { webcrypto } from 'node:crypto';
+import { vi } from 'vitest';
 import { AutoBackup, CreateBackup, OpenBackup, RestoreBackup, WipeAllData } from '../application/use-cases/backup';
 import { SqliteSettingsRepository } from './repositories/sqlite-repositories';
 import { ValidationError } from '../application/errors';
@@ -6,6 +7,8 @@ import { MIGRATIONS, runMigrations } from './sqlite/migrations';
 import { SqliteBackupStore } from './sqlite/sqlite-backup-store';
 import { SqliteTransactionRepository } from './repositories/sqlite-repositories';
 import { NodeSqliteDatabase } from './testing/node-sqlite-database';
+import { InMemorySettings } from '../application/testing/in-memory';
+import { withoutSecrets } from '../ui/backup-files';
 
 // jsdom no trae crypto.subtle; en el navegador y en Android sí existe.
 if (!globalThis.crypto?.subtle) Object.defineProperty(globalThis, 'crypto', { value: webcrypto });
@@ -47,6 +50,29 @@ describe('respaldo', () => {
     await expect(new OpenBackup().execute(file, 'otra-clave')).rejects.toThrow('Contraseña incorrecta');
     await expect(new OpenBackup().execute('{"hola":1}', 'x')).rejects.toThrow(ValidationError);
     await expect(new CreateBackup(a.store).execute('123')).rejects.toThrow(ValidationError);
+  });
+
+  it('rechaza al instante cabeceras alteradas (iteraciones, salt, iv, datos) sin tocar la base', async () => {
+    const a = await dbWith([100]);
+    const file = JSON.parse(await new CreateBackup(a.store).execute('secreta1'));
+    const bad = [
+      { iterations: 1_000_000_000 },
+      { iterations: 1 },
+      { iterations: 310_000.5 },
+      { salt: btoa('corto') },
+      { iv: btoa('x'.repeat(16)) },
+      { data: '' },
+      { data: '¡no es base64!' },
+    ];
+    const start = Date.now();
+    for (const change of bad) {
+      await expect(new OpenBackup().execute(JSON.stringify({ ...file, ...change }), 'secreta1')).rejects.toThrow(
+        'El archivo no es un respaldo de esta app',
+      );
+    }
+    expect(Date.now() - start).toBeLessThan(1000);
+    expect((await new OpenBackup().execute(JSON.stringify(file), 'secreta1')).summary.transactions).toBe(1);
+    expect(await a.repo.listAll()).toHaveLength(1);
   });
 
   it('un respaldo viejo (montos en pesos, esquema 3) se migra a centavos al restaurar', async () => {
@@ -117,7 +143,7 @@ describe('respaldo', () => {
 
   it('el respaldo automático toca cada 7 días y se abre con su contraseña', async () => {
     const a = await dbWith([1250]);
-    const auto = new AutoBackup(new SqliteSettingsRepository(a.db), new CreateBackup(a.store));
+    const auto = new AutoBackup(new SqliteSettingsRepository(a.db), new CreateBackup(a.store), new InMemorySettings());
     expect(await auto.isDue('2026-10-05')).toBe(false);
     await expect(auto.enable('corta')).rejects.toThrow(ValidationError);
     await auto.enable('semanal1');
@@ -134,7 +160,7 @@ describe('respaldo', () => {
 
   it('el respaldo automático puede ser diario y conservar más o menos archivos', async () => {
     const a = await dbWith([1250]);
-    const auto = new AutoBackup(new SqliteSettingsRepository(a.db), new CreateBackup(a.store));
+    const auto = new AutoBackup(new SqliteSettingsRepository(a.db), new CreateBackup(a.store), new InMemorySettings());
     await auto.enable('diario12');
     expect(await auto.keep()).toBe(4);
     await auto.setFrequency(1);
@@ -144,5 +170,67 @@ describe('respaldo', () => {
     expect(await auto.isDue('2026-10-06')).toBe(true);
     expect(await auto.keep()).toBe(8);
     await expect(auto.setKeep(3)).rejects.toThrow(ValidationError);
+  });
+  it('la contraseña del respaldo automático no queda en la base, ni en los respaldos, ni en la copia previa', async () => {
+    const a = await dbWith([1250]);
+    const settings = new SqliteSettingsRepository(a.db);
+    const secrets = new InMemorySettings();
+    const auto = new AutoBackup(settings, new CreateBackup(a.store), secrets);
+    await auto.enable('clave-segura');
+    await settings.set('pin_hash', 'hash');
+    expect(await a.db.all("SELECT value FROM settings WHERE key = 'auto_backup_password'")).toEqual([]);
+    expect(JSON.stringify(await a.store.dump())).not.toContain('clave-segura');
+    expect(JSON.stringify(withoutSecrets(await a.store.dump()))).not.toContain('pin_hash');
+    expect(await auto.isEnabled()).toBe(true);
+    const { summary } = await new OpenBackup().execute(await auto.create(), 'clave-segura');
+    expect(summary.transactions).toBe(1);
+  });
+
+  it('mueve la contraseña vieja al almacenamiento seguro; si falla, la deja donde estaba', async () => {
+    const a = await dbWith([1]);
+    const settings = new SqliteSettingsRepository(a.db);
+    await settings.set('auto_backup_password', 'vieja123');
+    const broken = { get: async () => undefined, set: () => Promise.reject(new Error('Keystore')) };
+    const failing = new AutoBackup(settings, new CreateBackup(a.store), broken);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await failing.migrateLegacyPassword();
+    expect(await settings.get('auto_backup_password')).toBe('vieja123');
+    expect(await failing.isEnabled()).toBe(true);
+
+    const secrets = new InMemorySettings();
+    const auto = new AutoBackup(settings, new CreateBackup(a.store), secrets);
+    await auto.migrateLegacyPassword();
+    expect(await settings.get('auto_backup_password')).toBe('');
+    expect(await secrets.get('auto_backup_password')).toBe('vieja123');
+    expect(await auto.isEnabled()).toBe(true);
+  });
+
+  it('un respaldo viejo con la contraseña dentro se restaura con el respaldo automático pidiendo contraseña', async () => {
+    const a = await dbWith([1]);
+    const data = await a.store.dump();
+    data.tables['settings'] = [...data.tables['settings'], { key: 'auto_backup_password', value: 'vieja123' }];
+    const b = await dbWith([]);
+    await new RestoreBackup(b.store).execute(data);
+    const auto = new AutoBackup(new SqliteSettingsRepository(b.db), new CreateBackup(b.store), new InMemorySettings());
+    expect(await b.db.all("SELECT value FROM settings WHERE key = 'auto_backup_password'")).toEqual([]);
+    expect(await auto.isEnabled()).toBe(false);
+    expect(await auto.needsPassword()).toBe(true);
+  });
+  it('la pantalla de privacidad queda activada en instalaciones nuevas y como estaba en las que ya existían', async () => {
+    const fresh = new NodeSqliteDatabase();
+    await runMigrations(fresh);
+    expect(await new SqliteSettingsRepository(fresh).get('privacy_screen')).toBeUndefined();
+
+    const old = new NodeSqliteDatabase();
+    await runMigrations(old, MIGRATIONS.filter((m) => m.version <= 15));
+    await old.run("INSERT INTO settings (key, value) VALUES ('currency', 'DOP')");
+    await runMigrations(old);
+    expect(await new SqliteSettingsRepository(old).get('privacy_screen')).toBe('0');
+
+    const chosen = new NodeSqliteDatabase();
+    await runMigrations(chosen, MIGRATIONS.filter((m) => m.version <= 15));
+    await chosen.run("INSERT INTO settings (key, value) VALUES ('privacy_screen', '1')");
+    await runMigrations(chosen);
+    expect(await new SqliteSettingsRepository(chosen).get('privacy_screen')).toBe('1');
   });
 });

@@ -314,6 +314,15 @@ export const MIGRATIONS: Migration[] = [
     // Los ajustes de antes cambiaron el saldo inicial y se quedan así: solo los nuevos dejan movimiento.
     statements: [`INSERT OR IGNORE INTO accounts (id, name, type, archived) VALUES ('acc-ajuste', 'Ajuste', 'banco', 1)`],
   },
+  {
+    version: 16,
+    name: 'pantalla de privacidad activada en instalaciones nuevas',
+    // Quien ya usaba la app sin tocar el ajuste la sigue teniendo apagada; en una instalación nueva no hay filas aún.
+    statements: [
+      `INSERT OR IGNORE INTO settings (key, value) SELECT 'privacy_screen', '0'
+        WHERE EXISTS (SELECT 1 FROM settings) OR EXISTS (SELECT 1 FROM transactions)`,
+    ],
+  },
 ];
 
 /** Aplica las migraciones pendientes en orden y devuelve las versiones aplicadas. */

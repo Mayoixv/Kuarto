@@ -4,6 +4,7 @@
   },
   "errors": {
     "notBackup": "This file isn't a backup from this app",
+    "backupTooBig": "The file is larger than {mb} MB: it isn't a backup from this app",
     "wrongPassword": "Wrong password or damaged file",
     "accountName": "Enter a name for the account",
     "accountType": "Invalid account type",
@@ -122,6 +123,7 @@
     "createBackupSub": "Password-encrypted file to keep off your phone",
     "autoBackup": "Automatic backup",
     "autoOff": "Encrypted, daily or weekly, in your phone's Documents/Kuarto",
+    "autoNeedsPassword": "Turned off when the backup was restored: turn it on and enter the password again",
     "autoError": "Couldn't save the last one; it retries when you open the app",
     "autoLast": "Last: {date} · Documents/Kuarto",
     "autoPending": "Pending; it runs when you open the app",
@@ -1228,6 +1230,11 @@
     "dbFailed": "Couldn't open the local database. Close and reopen the app.\n\nDetails: {detail}"
   },
   "changelog": {
+    "1_0_15": [
+      "On new installs, \"Hide in recent apps\" comes turned on: nobody sees your balances in the recent apps list and screenshots are blocked. Change it in Settings › Security and privacy.",
+      "The automatic backup password is now kept in Android's secure storage and no longer travels inside backups. If you restore a backup, enter it again.",
+      "Extra protection when opening backups and downloading updates."
+    ],
     "1_0_14": [
       "Home shows how much you owe on your cards and what's left available after paying them.",
       "Correcting an account balance now leaves a visible \"Adjustment\" in Transactions, which you can delete.",

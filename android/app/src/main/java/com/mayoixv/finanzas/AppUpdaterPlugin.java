@@ -19,6 +19,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Actualiza la app desde los Releases de GitHub: descarga el APK y abre el instalador de Android.
@@ -26,6 +28,11 @@ import java.net.URL;
  */
 @CapacitorPlugin(name = "AppUpdater")
 public class AppUpdaterPlugin extends Plugin {
+
+    /** Solo GitHub: la página del Release y los servidores a los que redirige para bajar el archivo. */
+    private static final List<String> HOSTS = Arrays.asList("github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com");
+    /** El APK pesa unos 15 MB; esto solo evita que una respuesta enorme llene el teléfono. */
+    private static final long MAX_BYTES = 150L * 1024 * 1024;
 
     /** La versión de depuración (la del teléfono del desarrollador) tiene otra firma: no puede instalar los Releases. */
     @PluginMethod
@@ -43,7 +50,7 @@ public class AppUpdaterPlugin extends Plugin {
     @PluginMethod
     public void downloadAndInstall(PluginCall call) {
         String url = call.getString("url");
-        if (url == null || !url.startsWith("https://")) {
+        if (!allowed(url)) {
             call.reject("Dirección de descarga inválida");
             return;
         }
@@ -58,11 +65,10 @@ public class AppUpdaterPlugin extends Plugin {
         }
         // En su propio hilo: los demás plugins (como la base de datos) no esperan a que termine la descarga.
         new Thread(() -> {
+            File apk = new File(new File(getContext().getCacheDir(), "updates"), "kuarto.apk");
             try {
-                File dir = new File(getContext().getCacheDir(), "updates");
                 //noinspection ResultOfMethodCallIgnored
-                dir.mkdirs();
-                File apk = new File(dir, "kuarto.apk");
+                apk.getParentFile().mkdirs();
                 download(url, apk);
                 Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", apk);
                 Intent install = new Intent(Intent.ACTION_VIEW);
@@ -73,12 +79,25 @@ public class AppUpdaterPlugin extends Plugin {
                 ret.put("needsPermission", false);
                 call.resolve(ret);
             } catch (Exception e) {
+                // Que no quede un APK a medias.
+                //noinspection ResultOfMethodCallIgnored
+                apk.delete();
                 call.reject("No se pudo descargar la actualización", e);
             }
         }).start();
     }
 
-    /** Sigue las redirecciones de GitHub hacia su servidor de archivos (solo https). */
+    /** https y un host de GitHub exacto (no basta con que la dirección empiece o contenga "github.com"). */
+    private static boolean allowed(String address) {
+        try {
+            URL u = new URL(address);
+            return "https".equals(u.getProtocol()) && HOSTS.contains(u.getHost().toLowerCase());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** Sigue las redirecciones de GitHub hacia su servidor de archivos, solo dentro de GitHub y con tope de tamaño. */
     private static void download(String address, File to) throws Exception {
         String current = address;
         for (int hops = 0; hops < 5; hops++) {
@@ -90,14 +109,23 @@ public class AppUpdaterPlugin extends Plugin {
             if (code >= 300 && code < 400) {
                 current = conn.getHeaderField("Location");
                 conn.disconnect();
-                if (current == null || !current.startsWith("https://")) throw new Exception("Redirección inválida");
+                if (current == null || !allowed(current)) throw new Exception("Redirección inválida");
                 continue;
             }
             if (code != 200) throw new Exception("HTTP " + code);
+            if (conn.getContentLengthLong() > MAX_BYTES) {
+                conn.disconnect();
+                throw new Exception("Archivo demasiado grande");
+            }
             try (InputStream in = conn.getInputStream(); FileOutputStream out = new FileOutputStream(to)) {
                 byte[] buf = new byte[64 * 1024];
+                long total = 0;
                 int n;
-                while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                while ((n = in.read(buf)) > 0) {
+                    total += n;
+                    if (total > MAX_BYTES) throw new Exception("Archivo demasiado grande");
+                    out.write(buf, 0, n);
+                }
             } finally {
                 conn.disconnect();
             }

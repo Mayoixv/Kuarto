@@ -23,11 +23,20 @@ async function prune(directory: Directory, folder: string, prefix: string, keep:
  * Copia de los datos antes de actualizar la base (o de restaurar un respaldo), dentro del almacenamiento privado de
  * la app (sin cifrar, igual que la base misma). Solo en el teléfono.
  */
+/** La copia previa va en claro: sin la contraseña del respaldo automático ni los datos del PIN. */
+export function withoutSecrets(data: BackupData): BackupData {
+  const settings = data.tables['settings']?.filter((r) => {
+    const key = String(r['key']);
+    return key !== 'auto_backup_password' && !key.startsWith('pin_');
+  });
+  return settings ? { ...data, tables: { ...data.tables, settings } } : data;
+}
+
 export async function saveSafetyCopy(data: BackupData, prefix = 'antes-de-actualizar-'): Promise<void> {
   if (!Capacitor.isNativePlatform()) return;
   await Filesystem.writeFile({
     path: `${SAFETY_FOLDER}/${prefix}${fileDate()}-v${data.schemaVersion}.json`,
-    data: JSON.stringify(data),
+    data: JSON.stringify(withoutSecrets(data)),
     directory: Directory.Data,
     encoding: Encoding.UTF8,
     recursive: true,

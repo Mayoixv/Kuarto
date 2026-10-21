@@ -4,6 +4,7 @@
   },
   "errors": {
     "notBackup": "Questo file non è un backup di questa app",
+    "backupTooBig": "Il file supera {mb} MB: non è un backup di questa app",
     "wrongPassword": "Password errata o file danneggiato",
     "accountName": "Scrivi un nome per il conto",
     "accountType": "Tipo di conto non valido",
@@ -122,6 +123,7 @@
     "createBackupSub": "File cifrato con password da conservare fuori dal telefono",
     "autoBackup": "Backup automatico",
     "autoOff": "Cifrato, ogni giorno o ogni settimana, in Documenti/Kuarto del telefono",
+    "autoNeedsPassword": "Disattivato durante il ripristino: attivalo e inserisci di nuovo la password",
     "autoError": "Impossibile salvare l'ultimo; riprova all'apertura dell'app",
     "autoLast": "Ultimo: {date} · Documenti/Kuarto",
     "autoPending": "In attesa; si fa all'apertura dell'app",
@@ -1228,6 +1230,11 @@
     "dbFailed": "Impossibile aprire il database locale. Chiudi e riapri l'app.\n\nDettaglio: {detail}"
   },
   "changelog": {
+    "1_0_15": [
+      "Nelle nuove installazioni \"Nascondi nelle app recenti\" è attivo: nessuno vede i tuoi saldi nelle app recenti e gli screenshot sono bloccati. Puoi cambiarlo in Impostazioni › Sicurezza e privacy.",
+      "La password del backup automatico ora è nell'archivio sicuro di Android e non viaggia più dentro i backup. Se ripristini un backup, inseriscila di nuovo.",
+      "Più protezione all'apertura dei backup e al download degli aggiornamenti."
+    ],
     "1_0_14": [
       "Nella Home vedi quanto devi pagare delle carte e quanto ti resta disponibile dopo averle pagate.",
       "Correggere il saldo di un conto lascia una \"Rettifica\" visibile nei movimenti, che puoi eliminare.",

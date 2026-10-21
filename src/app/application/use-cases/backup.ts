@@ -80,18 +80,50 @@ export type AutoBackupFrequency = (typeof AUTO_BACKUP_FREQUENCIES)[number];
 export const AUTO_BACKUP_KEEP_OPTIONS = [2, 4, 8, 12] as const;
 const DEFAULT_KEEP = 4;
 
+/** Claves del respaldo automático: la contraseña va en el almacenamiento seguro; en `settings` solo la bandera. */
+const PASSWORD_KEY = 'auto_backup_password';
+const ENABLED_KEY = 'auto_backup_enabled';
+
 /**
- * Respaldo automático, cifrado con una contraseña que se elige una vez y se guarda en la app.
+ * Respaldo automático, cifrado con una contraseña que se elige una vez. La contraseña se guarda en `secrets`
+ * (el Keystore de Android), nunca en la base: la base y sus copias no la llevan.
  * El archivo lo guarda la interfaz (en Documentos del teléfono); aquí solo se decide cuándo y se genera.
  */
 export class AutoBackup {
   constructor(
     private readonly settings: ISettingsRepository,
     private readonly backup: CreateBackup,
+    private readonly secrets: ISettingsRepository,
   ) {}
 
+  /**
+   * Hasta la 1.0.14 la contraseña estaba en `settings`: se mueve al almacenamiento seguro y se borra de la base.
+   * Si el almacenamiento seguro falla, se deja donde estaba para no apagar el respaldo.
+   */
+  async migrateLegacyPassword(): Promise<void> {
+    const legacy = await this.settings.get(PASSWORD_KEY);
+    if (!legacy) return;
+    await this.settings.set(ENABLED_KEY, '1');
+    try {
+      await this.secrets.set(PASSWORD_KEY, legacy);
+      if ((await this.secrets.get(PASSWORD_KEY)) !== legacy) throw new Error('El almacenamiento seguro no devolvió la contraseña');
+      await this.settings.set(PASSWORD_KEY, '');
+    } catch (error) {
+      console.error('No se pudo mover la contraseña del respaldo automático', error);
+    }
+  }
+
+  private async password(): Promise<string | null> {
+    return (await this.secrets.get(PASSWORD_KEY)) || (await this.settings.get(PASSWORD_KEY)) || null;
+  }
+
   async isEnabled(): Promise<boolean> {
-    return !!(await this.settings.get('auto_backup_password'));
+    return (await this.settings.get(ENABLED_KEY)) === '1' && !!(await this.password());
+  }
+
+  /** Activado pero sin contraseña en este teléfono: pasa al restaurar un respaldo hecho en otro. */
+  async needsPassword(): Promise<boolean> {
+    return (await this.settings.get(ENABLED_KEY)) === '1' && !(await this.password());
   }
 
   async lastRun(): Promise<string | null> {
@@ -100,12 +132,15 @@ export class AutoBackup {
 
   async enable(password: string): Promise<void> {
     if (password.length < MIN_PASSWORD) throw new ValidationError('passwordLength', { min: MIN_PASSWORD });
-    await this.settings.set('auto_backup_password', password);
+    await this.secrets.set(PASSWORD_KEY, password);
+    await this.settings.set(ENABLED_KEY, '1');
     await this.settings.set('auto_backup_last', '');
   }
 
   async disable(): Promise<void> {
-    await this.settings.set('auto_backup_password', '');
+    await this.settings.set(ENABLED_KEY, '0');
+    await this.secrets.set(PASSWORD_KEY, '');
+    await this.settings.set(PASSWORD_KEY, '');
   }
 
   async frequency(): Promise<AutoBackupFrequency> {
@@ -136,7 +171,7 @@ export class AutoBackup {
 
   /** Genera el archivo cifrado. Se marca como hecho solo cuando la interfaz confirma que lo guardó. */
   async create(): Promise<string> {
-    const password = await this.settings.get('auto_backup_password');
+    const password = await this.password();
     if (!password) throw new ValidationError('autoBackupOff');
     return this.backup.execute(password);
   }

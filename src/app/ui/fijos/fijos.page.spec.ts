@@ -29,6 +29,7 @@ async function render(withData: boolean) {
     backup: { dump: () => Promise.reject(), restore: () => Promise.reject(), wipe: () => Promise.reject() },
     debts: new InMemoryDebts(),
     accounts: new InMemoryAccounts(transactions, categories),
+    secrets: new InMemorySettings(),
   };
   repos.categories.items.set('ren', { id: 'ren', name: 'Alquiler', type: 'fijo' });
   const container = buildContainer(repos, new SequentialIds());
