@@ -83,7 +83,9 @@
     },
     "backupKeep": "Choisissez combien de sauvegardes garder",
     "copySameMonth": "Choisissez un mois différent de la destination",
-    "copyFixed": "Les paiements de Fixes ne sont pas copiés : Fixes les crée déjà chaque mois"
+    "copyFixed": "Les paiements de Fixes ne sont pas copiés : Fixes les crée déjà chaque mois",
+    "quickAmount": "Je n'ai pas trouvé le montant. Écrivez, par exemple : 500 essence",
+    "quickCategory": "Il n'y a pas de catégorie de dépense où l'enregistrer"
   },
   "common": {
     "cancel": "Annuler",
@@ -247,6 +249,9 @@
     "currency": "Devise",
     "currencyChange": "Devise : {label}. Changer",
     "currencyNote": "Cela change seulement le symbole affiché avec les montants. Les montants enregistrés ne sont pas convertis.",
+    "fxRate": "Taux de change du {date} : {rate}. À titre indicatif : les montants ne sont pas convertis.",
+    "fxNone": "Avec internet, vous verrez ici le taux du jour entre le peso et le dollar.",
+    "fxSource": "Rates By Exchange Rate API",
     "currencyDOP": "Peso dominicain (RD$)",
     "currencyUSD": "Dollar américain (US$)",
     "currencyChanged": "Devise changée en {code}",
@@ -264,7 +269,7 @@
     "news": "Nouveautés de cette version",
     "privacy": "Confidentialité",
     "privacyText": [
-      "Kuarto garde tout uniquement sur ce téléphone. Pas de comptes, de serveurs ni de publicité, et l'appli n'envoie vos données à personne. Elle se connecte à Internet seulement pour chercher une nouvelle version et, si vous vous connectez avec Google, pour envoyer votre sauvegarde chiffrée.",
+      "Kuarto garde tout uniquement sur ce téléphone. Pas de comptes, de serveurs ni de publicité, et l'appli n'envoie vos données à personne. Elle se connecte à Internet seulement pour chercher une nouvelle version, pour obtenir le taux de change du jour et, si vous vous connectez avec Google, pour envoyer votre sauvegarde chiffrée.",
       "Vos données ne quittent le téléphone que lorsque vous créez une sauvegarde, exportez un fichier ou activez la sauvegarde dans le cloud. Les sauvegardes sont chiffrées avec votre mot de passe : dans le cloud, personne ne peut les lire, pas même Google.",
       "Les autorisations demandées servent à vous envoyer des rappels, déverrouiller par empreinte, enregistrer des sauvegardes ou des fichiers sur le téléphone et installer les nouvelles versions.",
       "Si vous supprimez l'appli sans sauvegarde, vos données sont perdues : personne d'autre n'en a une copie."
@@ -591,6 +596,7 @@
     "emptyTitle": "Aucune opération en {month} pour l'instant.",
     "emptyText": "Touchez le bouton + pour noter la première et vous verrez ici votre solde et où part l'argent.",
     "balanceOf": "Solde de {month}",
+    "fxEquivalent": "≈ {amount} au taux du {date}",
     "negative": "Négatif : vous dépensez plus que vous ne gagnez",
     "income": "Revenus",
     "expenses": "Dépenses",
@@ -1230,6 +1236,12 @@
     "dbFailed": "Impossible d'ouvrir la base de données locale. Fermez et rouvrez l'appli.\n\nDétail : {detail}"
   },
   "changelog": {
+    "1_0_16": [
+      "Taux de change du jour : l'Accueil et les Réglages montrent votre solde dans l'autre devise (peso ou dollar). À titre indicatif : vos montants ne changent pas.",
+      "Nouvelle option « Personnalité » dans Réglages › Fixes et rappels : avec « Drôle », Kuarto vous raconte une blague quand vous notez une grosse dépense.",
+      "Noter depuis la notification (facultatif) : une notification fixe où vous écrivez « 500 essence » et la dépense est enregistrée.",
+      "Les longues nouveautés ne débordent plus de l'écran, et la question de votre prénom attend que vous les fermiez."
+    ],
     "1_0_15": [
       "Sur les nouvelles installations, « Masquer dans les applis récentes » est activé : personne ne voit vos soldes dans les applis récentes et les captures d'écran sont bloquées. À changer dans Réglages › Sécurité et confidentialité.",
       "Le mot de passe de la sauvegarde automatique est désormais gardé dans le stockage sécurisé d'Android et ne voyage plus dans les sauvegardes. Après une restauration, saisissez-le à nouveau.",
@@ -1797,5 +1809,60 @@
     "detail": "{title} : {amount} le {date}. Il corrige le solde du compte et ne compte ni comme revenu ni comme dépense.",
     "delete": "Supprimer l'ajustement",
     "confirm": "Le solde du compte revient à ce qu'il était avant l'ajustement."
+  },
+  "personality": {
+    "label": "Personnalité",
+    "off": "Désactivée",
+    "funny": "Drôle",
+    "note": "Avec « Drôle », une courte blague apparaît quand vous notez une grosse dépense (plus de 10 % de ce qui est entré dans le mois).",
+    "announceTitle": "Nouveau dans Kuarto : Personnalité",
+    "announceBody": "Kuarto peut maintenant vous raconter une blague quand vous notez une grosse dépense. Activez-la dans {path}."
+  },
+  "jokes": {
+    "comida": [
+      "Ce plat avait intérêt à être délicieux. Votre estomac applaudit ; votre budget réfléchit.",
+      "On dit que l'amour passe par l'estomac. Aujourd'hui, il est passé avec l'addition.",
+      "Bien manger, c'est aussi prendre soin de soi. C'est noté."
+    ],
+    "supermercado": [
+      "Vous êtes parti pour du pain et revenu avec la moitié du magasin. Ça arrive aux meilleurs.",
+      "Le caddie s'est rempli tout seul, n'est-ce pas ? Ça arrive toujours."
+    ],
+    "transporte": [
+      "Arriver à l'heure n'a pas de prix… enfin, aujourd'hui si.",
+      "Ce trajet vous a mené loin. Et il est noté, c'est l'essentiel."
+    ],
+    "gasolina": [
+      "Réservoir plein, cœur tranquille. Le portefeuille se remet.",
+      "La voiture est contente. Espérons qu'elle vous emmène en balade pour se faire pardonner."
+    ],
+    "ocio": [
+      "S'amuser, c'est bon pour le moral. Et ça, personne ne vous l'enlèvera !",
+      "Aujourd'hui, c'était plaisir. C'est noté pour le résumé du mois.",
+      "Une bonne sortie mérite un bon suivi. Fait."
+    ],
+    "ropa": [
+      "Ce look devait rentrer avec vous. Le placard applaudit.",
+      "Porter du neuf fait du bien. Le noter aussi."
+    ],
+    "hogar": [
+      "La maison est plus jolie, et Kuarto l’a noté.",
+      "Investir dans la maison, c'est investir dans le canapé d'où vous suivez vos dépenses."
+    ],
+    "generic": [
+      "Grosse dépense repérée. Respirez : elle est notée.",
+      "Cette dépense a fait une entrée remarquée. Heureusement, elle est aussi notée.",
+      "Votre futur vous remercie de l’avoir notée.",
+      "Noté. Savoir où va votre argent, c'est déjà la moitié du chemin."
+    ]
+  },
+  "quickNotif": {
+    "toggle": "Noter depuis la notification",
+    "toggleSub": "Une notification fixe pour noter une dépense en écrivant, par exemple, « 500 essence »",
+    "channel": "Saisie rapide",
+    "title": "Noter une dépense",
+    "body": "Touchez « Noter la dépense » et écrivez le montant et une note : 500 essence",
+    "action": "Noter la dépense",
+    "saved": "Dépense de {amount} enregistrée dans {category}"
   }
 }

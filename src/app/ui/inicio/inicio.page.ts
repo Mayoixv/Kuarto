@@ -16,6 +16,7 @@ import { MonthlySummary } from '../../domain/monthly-summary';
 import { Transaction } from '../../domain/transaction';
 import { formatDay, formatMoney, formatPercent, monthLabel, todayIso } from '../format';
 import { MonthSwitcherComponent } from '../month-switcher.component';
+import { ExchangeRateService } from '../exchange-rate.service';
 import { MonthState } from '../month-state';
 import { TransactionFormService } from '../movimientos/transaction-form.service';
 import { BudgetsCardComponent } from '../presupuestos/budgets-card.component';
@@ -63,6 +64,7 @@ export class InicioPage {
   protected readonly t = t;
   private readonly container = inject(APP_CONTAINER);
   protected readonly monthState = inject(MonthState);
+  protected readonly fx = inject(ExchangeRateService);
   private readonly transactionForm = inject(TransactionFormService);
   private readonly modalCtrl = inject(ModalController);
 

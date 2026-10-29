@@ -184,6 +184,14 @@
           </app-dropdown>
         </div>
         <p class="note">{{ t('ajustes.currencyNote') }}</p>
+        <p class="note">
+          @if (fx.rateText(); as rate) {
+            {{ t('ajustes.fxRate', { date: fx.rateDay() ?? '', rate }) }}
+            <a class="fx-source" href="https://www.exchangerate-api.com" target="_blank" rel="noopener">{{ t('ajustes.fxSource') }}</a>
+          } @else {
+            {{ t('ajustes.fxNone') }}
+          }
+        </p>
       </section>
     }
 

@@ -24,10 +24,12 @@ import { t } from '../i18n';
     </div>
   `,
   styles: `
+    /* Nunca más alta que la pantalla: título y botón quedan fijos y solo la lista se desplaza. */
     .help {
       display: flex;
       flex-direction: column;
       gap: 12px;
+      max-height: calc(100dvh - var(--ion-safe-area-top, 0px) - 48px);
       padding: 8px 20px calc(var(--ion-safe-area-bottom, 0px) + 20px);
       background: var(--paper);
       color: var(--text-on-light);
@@ -38,6 +40,11 @@ import { t } from '../i18n';
       margin: 4px auto 4px;
       border-radius: 2px;
       background: var(--line-axis);
+    }
+    .grab,
+    .title,
+    .ok {
+      flex: none;
     }
     .title {
       display: flex;
@@ -52,12 +59,16 @@ import { t } from '../i18n';
       font-size: 24px;
     }
     .points {
+      flex: 0 1 auto;
+      min-height: 0;
       margin: 0;
       padding: 0;
       list-style: none;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
     .points li {
       position: relative;

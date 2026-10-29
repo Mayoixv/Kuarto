@@ -6,6 +6,8 @@ import { NotificationsService } from './ui/notifications.service';
 import { AutoBackupService } from './ui/auto-backup.service';
 import { TourComponent } from './ui/tour/tour.component';
 import { UpdateService } from './ui/update/update.service';
+import { PersonalityService } from './ui/personality.service';
+import { QuickNotificationService } from './ui/quick-notification.service';
 import { NewsService } from './ui/news/news.service';
 import { AlertController } from '@ionic/angular';
 import { APP_CONTAINER } from './app.container';
@@ -29,7 +31,18 @@ export class AppComponent {
   constructor() {
     // Un momento después de abrir, para no tapar la primera pantalla mientras carga.
     const news = inject(NewsService);
-    setTimeout(() => news.showIfUpdated().then(() => this.askNameOnce()).catch(console.error), 1500);
+    const personality = inject(PersonalityService);
+    // Notificación fija para registrar un gasto (si está activada) y su acción "Registrar gasto".
+    inject(QuickNotificationService).start();
+    setTimeout(
+      () =>
+        news
+          .showIfUpdated()
+          .then((updated) => (updated ? personality.announceOnce().catch(console.error) : undefined))
+          .then(() => this.askNameOnce())
+          .catch(console.error),
+      1500,
+    );
   }
 
   private readonly container = inject(APP_CONTAINER);

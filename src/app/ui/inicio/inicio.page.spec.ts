@@ -35,7 +35,8 @@ async function render(withData: boolean) {
   };
   repos.categories.items.set('sal', { id: 'sal', name: 'Salario', type: 'ingreso' });
   repos.categories.items.set('com', { id: 'com', name: 'Comida', type: 'variable' });
-  const container = buildContainer(repos, new SequentialIds());
+  // Sin red en las pruebas: el tipo de cambio queda sin tasa.
+  const container = buildContainer(repos, new SequentialIds(), { latest: () => Promise.reject(new Error('sin red')) });
   if (withData) {
     await container.addTransaction.execute({ date: '2026-10-01', amount: 100000, categoryId: 'sal' });
     await container.addTransaction.execute({ date: '2026-10-02', amount: 25000, categoryId: 'com' });

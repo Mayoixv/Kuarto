@@ -83,7 +83,9 @@
     },
     "backupKeep": "Choose how many backups to keep",
     "copySameMonth": "Choose a month other than the destination",
-    "copyFixed": "Recurring payments aren't copied: Recurring already creates them every month"
+    "copyFixed": "Recurring payments aren't copied: Recurring already creates them every month",
+    "quickAmount": "I couldn't find the amount. Type, for example: 500 gas",
+    "quickCategory": "There is no expense category to save it in"
   },
   "common": {
     "cancel": "Cancel",
@@ -247,6 +249,9 @@
     "currency": "Currency",
     "currencyChange": "Currency: {label}. Change",
     "currencyNote": "It only changes the symbol shown with amounts. Saved amounts aren't converted.",
+    "fxRate": "Exchange rate on {date}: {rate}. Just for reference: amounts are not converted.",
+    "fxNone": "With internet, you will see the daily peso–dollar exchange rate here.",
+    "fxSource": "Rates By Exchange Rate API",
     "currencyDOP": "Dominican peso (RD$)",
     "currencyUSD": "US dollar (US$)",
     "currencyChanged": "Currency changed to {code}",
@@ -264,7 +269,7 @@
     "news": "What's new in this version",
     "privacy": "Privacy",
     "privacyText": [
-      "Kuarto keeps everything only on this phone. There are no accounts, servers or ads, and the app doesn't send your data to anyone. It only goes online to check for a new version and, if you sign in with Google, to upload your encrypted backup.",
+      "Kuarto keeps everything only on this phone. There are no accounts, servers or ads, and the app doesn't send your data to anyone. It only goes online to check for a new version, to get the daily exchange rate and, if you sign in with Google, to upload your encrypted backup.",
       "Your data only leaves the phone when you create a backup, export a file or turn on the cloud backup. Backups are encrypted with your password: in the cloud nobody can read them, not even Google.",
       "The permissions it asks for are to show you reminders, unlock with your fingerprint, save backups or files on the phone and install new versions.",
       "If you delete the app without a backup, your data is lost: nobody else has a copy."
@@ -591,6 +596,7 @@
     "emptyTitle": "No transactions yet in {month}.",
     "emptyText": "Tap the + button to add the first one and you'll see your balance and where your money goes here.",
     "balanceOf": "{month} balance",
+    "fxEquivalent": "≈ {amount} at the {date} rate",
     "negative": "Negative, you're spending more than you earn",
     "income": "Income",
     "expenses": "Expenses",
@@ -1230,6 +1236,12 @@
     "dbFailed": "Couldn't open the local database. Close and reopen the app.\n\nDetails: {detail}"
   },
   "changelog": {
+    "1_0_16": [
+      "Daily exchange rate: Home and Settings show your balance in the other currency (peso or dollar). Just for reference: your amounts do not change.",
+      "New \"Personality\" option in Settings › Recurring and reminders: with \"Funny\", Kuarto tells you a joke when you log a big expense.",
+      "Log from the notification (optional): a pinned notification where you type \"500 gas\" and the expense is saved.",
+      "Long release notes no longer overflow the screen, and the name question waits until you close them."
+    ],
     "1_0_15": [
       "On new installs, \"Hide in recent apps\" comes turned on: nobody sees your balances in the recent apps list and screenshots are blocked. Change it in Settings › Security and privacy.",
       "The automatic backup password is now kept in Android's secure storage and no longer travels inside backups. If you restore a backup, enter it again.",
@@ -1790,5 +1802,60 @@
     "detail": "{title}: {amount} on {date}. It corrects the account balance and doesn't count as income or expense.",
     "delete": "Delete adjustment",
     "confirm": "The account balance goes back to what it was before the adjustment."
+  },
+  "personality": {
+    "label": "Personality",
+    "off": "Off",
+    "funny": "Funny",
+    "note": "With \"Funny\", a short joke shows up when you log a big expense (more than 10% of what came in this month).",
+    "announceTitle": "New in Kuarto: Personality",
+    "announceBody": "Kuarto can now tell you a joke when you log a big expense. Turn it on in {path}."
+  },
+  "jokes": {
+    "comida": [
+      "That dish had better be amazing. Your stomach applauds; your budget is thinking it over.",
+      "They say the way to the heart is through the stomach. Today it came with a bill.",
+      "Eating well is self-care too. Logged."
+    ],
+    "supermercado": [
+      "You went for bread and came back with half the store. Happens to the best of us.",
+      "The cart filled itself up, right? It always does."
+    ],
+    "transporte": [
+      "Being on time is priceless… well, today it had a price.",
+      "That trip took you far. And it is logged, which is what matters."
+    ],
+    "gasolina": [
+      "Full tank, calm heart. The wallet is recovering.",
+      "The car is happy. Hopefully it takes you somewhere nice to make up for it."
+    ],
+    "ocio": [
+      "Having fun is good for your mental health. No regrets!",
+      "Today was for enjoying. It is logged for the monthly summary.",
+      "A good plan deserves a good record. Done."
+    ],
+    "ropa": [
+      "That look just had to come home with you. The closet applauds.",
+      "Wearing something new feels good. So does logging it."
+    ],
+    "hogar": [
+      "Home looks nicer, and Kuarto has it logged.",
+      "Investing in your home means investing in the couch where you check your spending."
+    ],
+    "generic": [
+      "Big expense spotted. Breathe: it is logged.",
+      "That expense made an entrance. Luckily, it also made the records.",
+      "Future you thanks you for logging it.",
+      "Logged. Knowing what you spent on is half the battle."
+    ]
+  },
+  "quickNotif": {
+    "toggle": "Log from the notification",
+    "toggleSub": "A pinned notification to log an expense by typing, for example, \"500 gas\"",
+    "channel": "Quick log",
+    "title": "Log an expense",
+    "body": "Tap \"Log expense\" and type the amount and a note: 500 gas",
+    "action": "Log expense",
+    "saved": "{amount} expense saved in {category}"
   }
 }

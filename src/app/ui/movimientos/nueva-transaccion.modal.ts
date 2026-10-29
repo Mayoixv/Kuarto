@@ -16,6 +16,8 @@ import { addIcons } from 'ionicons';
 import { addOutline, cameraOutline, close, mic, micOutline } from 'ionicons/icons';
 import { Account, CASH_ACCOUNT_ID } from '../../domain/account';
 import { accountChoices, accountOptions, rememberAccount } from '../cuentas/account-choices';
+import { PersonalityService } from '../personality.service';
+import { lastCategoryKey } from '../../application/use-cases/quick-expense';
 import { APP_CONTAINER } from '../../app.container';
 import { Category, isExpenseType } from '../../domain/category';
 import { monthOf } from '../../domain/month';
@@ -33,7 +35,6 @@ type Kind = 'gasto' | 'ingreso';
 /** Cuánto se ve el check de éxito antes de cerrar (design.md, 10.2). */
 const SUCCESS_VISIBLE_MS = 1200;
 const MAX_PHOTOS = 3;
-const lastCategoryKey = (kind: Kind) => `last_category_${kind}`;
 
 interface Part {
   categoryId: string | null;
@@ -56,6 +57,7 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
   protected readonly t = t;
   private readonly container = inject(APP_CONTAINER);
   private readonly modalCtrl = inject(ModalController);
+  private readonly personality = inject(PersonalityService);
   private readonly alerts = inject(AlertController);
   private readonly undo = inject(UndoService);
 
@@ -303,6 +305,8 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
       this.saved.set(true);
       await new Promise((resolve) => setTimeout(resolve, SUCCESS_VISIBLE_MS));
       await this.modalCtrl.dismiss(null, 'saved');
+      // Con la personalidad "Chistosa", un gasto nuevo y grande trae un chiste; no se espera por él.
+      if (!this.transaction) this.personality.afterSave(saved).catch(console.error);
     } catch (e) {
       this.error.set(errorText(e, 'common.saveFailed'));
       this.saving.set(false);

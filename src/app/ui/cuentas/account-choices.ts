@@ -1,8 +1,7 @@
 import { AppContainer } from '../../app.container';
 import { Account, CASH_ACCOUNT_ID } from '../../domain/account';
 import { t } from '../i18n';
-
-const LAST_ACCOUNT_KEY = 'last_account';
+import { LAST_ACCOUNT_KEY } from '../../application/use-cases/quick-expense';
 
 export const ACCOUNT_TYPES: Account['type'][] = ['efectivo', 'banco', 'ahorro', 'tarjeta', 'inversion'];
 export const accountTypeLabel = (type: Account['type']) => t(`accountType.${type}`);

@@ -18,7 +18,7 @@ Todo se guarda en tu teléfono, sin publicidad. Si quieres, el respaldo semanal 
 - **Bienvenida** con preguntas iniciales que dejan listas cuentas, sueldo, fijos, deudas y metas, y un **recorrido** con ejemplos.
 - **Apariencia:** modo claro u oscuro, paletas de color o un color propio.
 - **Idiomas:** español, inglés, portugués, francés, italiano y japonés (las traducciones son borradores sin revisión nativa).
-- Moneda en pesos dominicanos (RD$) o dólares (US$). Solo cambia el símbolo, no convierte montos.
+- Moneda en pesos dominicanos (RD$) o dólares (US$). Cambiarla solo cambia el símbolo: los montos guardados no se convierten. Como dato, Inicio y Ajustes muestran el equivalente en la otra moneda con el tipo de cambio del día (de open.er-api.com, consultado como mucho una vez al día; solo se pide la tasa, sin enviar ningún dato tuyo). Sin internet se usa la última tasa guardada.
 
 ## Instalar
 

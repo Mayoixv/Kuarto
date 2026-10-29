@@ -80,7 +80,9 @@
     },
     "backupKeep": "Elige cuántos respaldos conservar",
     "copySameMonth": "Elige un mes distinto al de destino",
-    "copyFixed": "Los pagos de Fijos no se copian: Fijos ya los crea cada mes"
+    "copyFixed": "Los pagos de Fijos no se copian: Fijos ya los crea cada mes",
+    "quickAmount": "No encontré el monto. Escribe, por ejemplo: 500 gasolina",
+    "quickCategory": "No hay una categoría de gasto donde guardarlo"
   },
   "common": {
     "cancel": "Cancelar",
@@ -244,6 +246,9 @@
     "currency": "Moneda",
     "currencyChange": "Moneda: {label}. Cambiar",
     "currencyNote": "Solo cambia el símbolo con que se muestran los montos. Los montos guardados no se convierten.",
+    "fxRate": "Tipo de cambio del {date}: {rate}. Es solo un dato: los montos no se convierten.",
+    "fxNone": "Con internet, aquí verás el tipo de cambio del día entre el peso y el dólar.",
+    "fxSource": "Rates By Exchange Rate API",
     "currencyDOP": "Peso dominicano (RD$)",
     "currencyUSD": "Dólar estadounidense (US$)",
     "currencyChanged": "Moneda cambiada a {code}",
@@ -261,7 +266,7 @@
     "news": "Novedades de esta versión",
     "privacy": "Privacidad",
     "privacyText": [
-      "Kuarto guarda todo solo en este teléfono. No hay cuentas, servidores ni publicidad, y la app no envía tus datos a nadie. Se conecta a internet solo para ver si hay una versión nueva y, si entras con Google, para subir tu respaldo cifrado.",
+      "Kuarto guarda todo solo en este teléfono. No hay cuentas, servidores ni publicidad, y la app no envía tus datos a nadie. Se conecta a internet solo para ver si hay una versión nueva, para consultar el tipo de cambio del día y, si entras con Google, para subir tu respaldo cifrado.",
       "Tus datos salen del teléfono únicamente cuando tú creas un respaldo, exportas un archivo o activas el respaldo en la nube. Los respaldos van cifrados con tu contraseña: en la nube nadie puede leerlos, ni Google.",
       "Los permisos que pide son para mostrarte avisos, desbloquear con huella, guardar respaldos o archivos en el teléfono e instalar las versiones nuevas.",
       "Si borras la app sin un respaldo, tus datos se pierden: nadie más tiene una copia."
@@ -588,6 +593,7 @@
     "emptyTitle": "Aún no registras movimientos en {month}.",
     "emptyText": "Toca el botón + para registrar el primero y aquí verás tu balance y en qué se va el gasto.",
     "balanceOf": "Balance de {month}",
+    "fxEquivalent": "≈ {amount} con la tasa del {date}",
     "negative": "En negativo: estás gastando más de lo que entra",
     "income": "Ingresos",
     "expenses": "Gastos",
@@ -1227,6 +1233,12 @@
     "dbFailed": "No se pudo abrir la base de datos local. Cierra y vuelve a abrir la aplicación.\n\nDetalle: {detail}"
   },
   "changelog": {
+    "1_0_16": [
+      "Tipo de cambio del día: en Inicio y en Ajustes ves cuánto es tu balance en la otra moneda (peso o dólar). Es solo un dato: tus montos no cambian.",
+      "Nueva opción \"Personalidad\" en Ajustes › Fijos y avisos: con \"Chistosa\", Kuarto te cuenta un chiste cuando anotas un gasto grande.",
+      "Registrar desde la notificación (opcional): una notificación fija donde escribes \"500 gasolina\" y el gasto queda guardado.",
+      "Las novedades largas ya no se salen de la pantalla, y la pregunta de tu nombre espera a que las cierres."
+    ],
     "1_0_15": [
       "En instalaciones nuevas, \"Ocultar en recientes\" viene activado: nadie ve tus saldos en la lista de apps recientes y no se pueden hacer capturas de pantalla. Lo cambias en Ajustes › Seguridad y privacidad.",
       "La contraseña del respaldo automático ahora se guarda en el almacenamiento seguro de Android y ya no viaja dentro de los respaldos. Si restauras un respaldo, vuelve a ponerla.",
@@ -1788,5 +1800,60 @@
     "detail": "{title}: {amount} el {date}. Corrige el saldo de la cuenta y no cuenta como ingreso ni gasto.",
     "delete": "Borrar ajuste",
     "confirm": "El saldo de la cuenta vuelve a como estaba antes del ajuste."
+  },
+  "personality": {
+    "label": "Personalidad",
+    "off": "Desactivada",
+    "funny": "Chistosa",
+    "note": "Con «Chistosa», al anotar un gasto grande (más del 10% de lo que entró en el mes) aparece un chiste corto.",
+    "announceTitle": "Nuevo en Kuarto: Personalidad",
+    "announceBody": "Kuarto ahora puede contarte un chiste cuando anotas un gasto grande. Actívalo en {path}."
+  },
+  "jokes": {
+    "comida": [
+      "Ese plato tenía que estar buenísimo. Tu estómago aplaude; tu presupuesto lo está pensando.",
+      "Dicen que el amor entra por la boca. Hoy entró con factura.",
+      "Comer rico también es cuidarse. Ya quedó anotado."
+    ],
+    "supermercado": [
+      "Fuiste por pan y volviste con medio súper. Pasa en las mejores familias.",
+      "El carrito se llenó solito, ¿verdad? Siempre pasa."
+    ],
+    "transporte": [
+      "Llegar a tiempo no tiene precio… bueno, hoy sí lo tuvo.",
+      "Ese viaje te llevó lejos. Y quedó anotado, que es lo importante."
+    ],
+    "gasolina": [
+      "Tanque lleno, corazón tranquilo. La cartera, recuperándose.",
+      "El carro quedó feliz. Ojalá te invite a pasear para compensar."
+    ],
+    "ocio": [
+      "Divertirse también es salud mental. ¡Y que te quiten lo bailado!",
+      "Hoy tocó gozar. Ya quedó anotado para el resumen del mes.",
+      "Un buen plan merece un buen registro. Hecho."
+    ],
+    "ropa": [
+      "Ese look tenía que venir a casa contigo. El clóset aplaude.",
+      "Estrenar se siente bien. Anotarlo, también."
+    ],
+    "hogar": [
+      "La casa quedó más bonita, y Kuarto lo tiene anotado.",
+      "Invertir en el hogar es invertir en el sofá desde donde miras tus gastos."
+    ],
+    "generic": [
+      "Gasto grande detectado. Respira: ya está anotado.",
+      "Ese gasto llegó con presencia. Por suerte, también con registro.",
+      "Tu yo del futuro te agradece haberlo anotado.",
+      "Anotado. Saber en qué gastaste ya es medio camino."
+    ]
+  },
+  "quickNotif": {
+    "toggle": "Registrar desde la notificación",
+    "toggleSub": "Una notificación fija para anotar un gasto escribiendo, por ejemplo, «500 gasolina»",
+    "channel": "Registro rápido",
+    "title": "Registrar un gasto",
+    "body": "Toca «Registrar gasto» y escribe el monto y una nota: 500 gasolina",
+    "action": "Registrar gasto",
+    "saved": "Gasto de {amount} en {category} guardado"
   }
 }

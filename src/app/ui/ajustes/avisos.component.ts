@@ -2,6 +2,9 @@ import { Component, inject, signal, viewChild } from '@angular/core';
 import { SelectFieldComponent } from '../select/select-field.component';
 import { IonToggle } from '@ionic/angular';
 import { NotificationPrefs, NotificationsService } from '../notifications.service';
+import { PersonalityService } from '../personality.service';
+import { QuickNotificationService } from '../quick-notification.service';
+import { Personality } from '../../domain/personality';
 import { t } from '../i18n';
 
 /** Horas que se ofrecen, de 6:00 a 22:00. */
@@ -24,6 +27,17 @@ export class AvisosComponent {
   protected readonly hourOptions = HOURS.map((h) => ({ value: h, label: hourLabel(h) }));
   protected readonly allHourOptions = Array.from({ length: 24 }, (_, h) => ({ value: h, label: hourLabel(h) }));
   private readonly mainToggle = viewChild<IonToggle>('main');
+  protected readonly personality = inject(PersonalityService);
+  protected readonly quick = inject(QuickNotificationService);
+  private readonly quickToggle = viewChild<IonToggle>('quickToggle');
+  protected readonly personalityOptions: { value: Personality; label: string }[] = [
+    { value: 'off', label: t('personality.off') },
+    { value: 'funny', label: t('personality.funny') },
+  ];
+
+  constructor() {
+    this.personality.load().catch(console.error);
+  }
 
   protected async toggle(on: boolean) {
     if (on === this.notifications.enabled()) return;
@@ -52,6 +66,32 @@ export class AvisosComponent {
     } catch (e) {
       console.error(e);
       this.error.set(t('avisos.saveFailed'));
+    }
+  }
+
+  protected async setPersonality(mode: Personality) {
+    this.error.set('');
+    try {
+      await this.personality.setMode(mode);
+    } catch (e) {
+      console.error(e);
+      this.error.set(t('avisos.saveFailed'));
+    }
+  }
+
+  protected async setQuick(on: boolean) {
+    if (on === this.quick.enabled()) return;
+    this.busy.set(true);
+    this.error.set('');
+    try {
+      if (!(await this.quick.setEnabled(on))) this.error.set(t('avisos.denied'));
+    } catch (e) {
+      console.error(e);
+      this.error.set(t('avisos.saveFailed'));
+    } finally {
+      this.busy.set(false);
+      const toggle = this.quickToggle();
+      if (toggle) toggle.checked = this.quick.enabled();
     }
   }
 }

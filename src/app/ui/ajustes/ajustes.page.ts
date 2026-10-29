@@ -24,6 +24,7 @@ import {
 import { APP_CONTAINER } from '../../app.container';
 import { Currency } from '../../domain/currency';
 import { CurrencyState } from '../currency-state';
+import { ExchangeRateService } from '../exchange-rate.service';
 import { DropdownComponent } from '../dropdown.component';
 import { MonthState } from '../month-state';
 import { DatosComponent } from './datos.component';
@@ -106,6 +107,7 @@ export class AjustesPage {
   private readonly container = inject(APP_CONTAINER);
   private readonly monthState = inject(MonthState);
   protected readonly currencyState = inject(CurrencyState);
+  protected readonly fx = inject(ExchangeRateService);
   private readonly alerts = inject(AlertController);
   protected readonly tour = inject(TourService);
   protected readonly update = inject(UpdateService);

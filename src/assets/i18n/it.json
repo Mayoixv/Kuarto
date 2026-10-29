@@ -83,7 +83,9 @@
     },
     "backupKeep": "Scegli quanti backup conservare",
     "copySameMonth": "Scegli un mese diverso da quello di destinazione",
-    "copyFixed": "I pagamenti di Fisse non si copiano: Fisse li crea già ogni mese"
+    "copyFixed": "I pagamenti di Fisse non si copiano: Fisse li crea già ogni mese",
+    "quickAmount": "Non ho trovato l’importo. Scrivi, per esempio: 500 benzina",
+    "quickCategory": "Non c’è una categoria di spesa in cui salvarla"
   },
   "common": {
     "cancel": "Annulla",
@@ -247,6 +249,9 @@
     "currency": "Valuta",
     "currencyChange": "Valuta: {label}. Cambia",
     "currencyNote": "Cambia solo il simbolo con cui si mostrano gli importi. Gli importi salvati non vengono convertiti.",
+    "fxRate": "Cambio del {date}: {rate}. Solo come riferimento: gli importi non vengono convertiti.",
+    "fxNone": "Con internet, qui vedrai il cambio del giorno tra peso e dollaro.",
+    "fxSource": "Rates By Exchange Rate API",
     "currencyDOP": "Peso dominicano (RD$)",
     "currencyUSD": "Dollaro statunitense (US$)",
     "currencyChanged": "Valuta cambiata in {code}",
@@ -264,7 +269,7 @@
     "news": "Novità di questa versione",
     "privacy": "Privacy",
     "privacyText": [
-      "Kuarto conserva tutto solo su questo telefono. Non ci sono account, server né pubblicità, e l'app non invia i tuoi dati a nessuno. Si collega a internet solo per vedere se c'è una nuova versione e, se accedi con Google, per caricare il tuo backup cifrato.",
+      "Kuarto conserva tutto solo su questo telefono. Non ci sono account, server né pubblicità, e l'app non invia i tuoi dati a nessuno. Si collega a internet solo per vedere se c'è una nuova versione, per il cambio del giorno e, se accedi con Google, per caricare il tuo backup cifrato.",
       "I tuoi dati escono dal telefono solo quando crei un backup, esporti un file o attivi il backup nel cloud. I backup sono cifrati con la tua password: nel cloud nessuno può leggerli, nemmeno Google.",
       "I permessi richiesti servono a mostrarti promemoria, sbloccare con l'impronta, salvare backup o file sul telefono e installare le nuove versioni.",
       "Se elimini l'app senza un backup, i tuoi dati vanno persi: nessun altro ne ha una copia."
@@ -591,6 +596,7 @@
     "emptyTitle": "Ancora nessun movimento a {month}.",
     "emptyText": "Tocca il pulsante + per registrare il primo e qui vedrai il tuo saldo e dove va la spesa.",
     "balanceOf": "Saldo di {month}",
+    "fxEquivalent": "≈ {amount} al cambio del {date}",
     "negative": "Negativo: spendi più di quanto guadagni",
     "income": "Entrate",
     "expenses": "Spese",
@@ -1230,6 +1236,12 @@
     "dbFailed": "Impossibile aprire il database locale. Chiudi e riapri l'app.\n\nDettaglio: {detail}"
   },
   "changelog": {
+    "1_0_16": [
+      "Cambio del giorno: in Home e in Impostazioni vedi il tuo saldo nell'altra valuta (peso o dollaro). Solo come riferimento: i tuoi importi non cambiano.",
+      "Nuova opzione «Personalità» in Impostazioni › Fisse e promemoria: con «Divertente», Kuarto ti racconta una battuta quando registri una spesa grande.",
+      "Registra dalla notifica (facoltativo): una notifica fissa dove scrivi «500 benzina» e la spesa viene salvata.",
+      "Le novità lunghe non escono più dallo schermo, e la domanda sul tuo nome aspetta che le chiudi."
+    ],
     "1_0_15": [
       "Nelle nuove installazioni \"Nascondi nelle app recenti\" è attivo: nessuno vede i tuoi saldi nelle app recenti e gli screenshot sono bloccati. Puoi cambiarlo in Impostazioni › Sicurezza e privacy.",
       "La password del backup automatico ora è nell'archivio sicuro di Android e non viaggia più dentro i backup. Se ripristini un backup, inseriscila di nuovo.",
@@ -1797,5 +1809,60 @@
     "detail": "{title}: {amount} il {date}. Corregge il saldo del conto e non conta come entrata né come spesa.",
     "delete": "Elimina rettifica",
     "confirm": "Il saldo del conto torna com'era prima della rettifica."
+  },
+  "personality": {
+    "label": "Personalità",
+    "off": "Disattivata",
+    "funny": "Divertente",
+    "note": "Con «Divertente», quando registri una spesa grande (più del 10% di quanto è entrato nel mese) appare una battuta breve.",
+    "announceTitle": "Novità in Kuarto: Personalità",
+    "announceBody": "Kuarto ora può raccontarti una battuta quando registri una spesa grande. Attivala in {path}."
+  },
+  "jokes": {
+    "comida": [
+      "Quel piatto doveva essere buonissimo. Lo stomaco applaude; il budget ci sta pensando.",
+      "Dicono che l'amore passi dalla gola. Oggi è passato con lo scontrino.",
+      "Mangiare bene è anche prendersi cura di sé. Registrato."
+    ],
+    "supermercado": [
+      "Sei uscito per il pane e sei tornato con mezzo supermercato. Succede nelle migliori famiglie.",
+      "Il carrello si è riempito da solo, vero? Succede sempre."
+    ],
+    "transporte": [
+      "Arrivare in orario non ha prezzo… beh, oggi ce l’ha avuto.",
+      "Quel viaggio ti ha portato lontano. Ed è registrato, che è ciò che conta."
+    ],
+    "gasolina": [
+      "Pieno fatto, cuore tranquillo. Il portafoglio si sta riprendendo.",
+      "L'auto è contenta. Speriamo ti porti a fare un giro per farsi perdonare."
+    ],
+    "ocio": [
+      "Divertirsi fa bene alla mente. E nessuno te lo toglie!",
+      "Oggi si è goduto. È registrato per il riepilogo del mese.",
+      "Un bel programma merita una bella registrazione. Fatto."
+    ],
+    "ropa": [
+      "Quel look doveva venire a casa con te. L’armadio applaude.",
+      "Mettere qualcosa di nuovo fa piacere. Anche registrarlo."
+    ],
+    "hogar": [
+      "La casa è più bella, e Kuarto l’ha registrato.",
+      "Investire nella casa è investire nel divano da cui guardi le tue spese."
+    ],
+    "generic": [
+      "Spesa grande avvistata. Respira: è registrata.",
+      "Questa spesa ha fatto il suo ingresso. Per fortuna, anche nei registri.",
+      "Il te del futuro ti ringrazia per averla registrata.",
+      "Registrato. Sapere in cosa hai speso è già metà del lavoro."
+    ]
+  },
+  "quickNotif": {
+    "toggle": "Registra dalla notifica",
+    "toggleSub": "Una notifica fissa per annotare una spesa scrivendo, per esempio, «500 benzina»",
+    "channel": "Registrazione rapida",
+    "title": "Registra una spesa",
+    "body": "Tocca «Registra spesa» e scrivi l’importo e una nota: 500 benzina",
+    "action": "Registra spesa",
+    "saved": "Spesa di {amount} salvata in {category}"
   }
 }

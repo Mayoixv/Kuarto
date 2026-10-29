@@ -7,21 +7,6 @@
   color: var(--muted-on-light);
 }
 
-.fixed-category {
-  margin: 0;
-  padding: 12px 16px;
-  border-radius: var(--radius-field);
-  background: var(--surface-soft-card);
-  font-size: 16px;
-}
-
-.fixed-label {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 15px;
-  color: var(--muted-on-light);
-}
-
 .rollover {
   min-height: 48px;
   --track-background-checked: var(--violet-600);

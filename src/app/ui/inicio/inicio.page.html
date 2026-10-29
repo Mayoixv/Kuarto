@@ -50,6 +50,9 @@
       <section class="hero" aria-labelledby="balance-label">
         <p id="balance-label" class="hero-label">{{ t('inicio.balanceOf', { month: monthState.label() }) }}</p>
         <app-balance-reel class="hero-amount" [text]="money(o.summary.balance)"></app-balance-reel>
+        @if (fx.equivalent(o.summary.balance); as equivalent) {
+          <p class="hero-fx">{{ t('inicio.fxEquivalent', { amount: equivalent, date: fx.rateDay() ?? '' }) }}</p>
+        }
         @if (o.summary.balance < 0) {
           <p class="hero-alert">
             <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>

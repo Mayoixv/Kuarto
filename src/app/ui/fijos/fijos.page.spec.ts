@@ -32,7 +32,8 @@ async function render(withData: boolean) {
     secrets: new InMemorySettings(),
   };
   repos.categories.items.set('ren', { id: 'ren', name: 'Alquiler', type: 'fijo' });
-  const container = buildContainer(repos, new SequentialIds());
+  // Sin red en las pruebas: el tipo de cambio queda sin tasa.
+  const container = buildContainer(repos, new SequentialIds(), { latest: () => Promise.reject(new Error('sin red')) });
   const month = currentMonth();
   if (withData) {
     await container.addRecurringExpense.execute({

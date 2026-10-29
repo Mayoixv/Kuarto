@@ -68,4 +68,35 @@
   @if (error(); as message) {
     <p class="error" role="alert">{{ message }}</p>
   }
+
+  <!-- Funciona aunque las notificaciones estén apagadas: el chiste sale dentro de la app. -->
+  <div class="rows personality">
+    <div class="row">
+      <app-select-field
+        [label]="t('personality.label')"
+        [inline]="true"
+        [options]="personalityOptions"
+        [value]="personality.mode()"
+        (valueChange)="setPersonality($event!)"
+      ></app-select-field>
+    </div>
+  </div>
+  <p class="note">{{ t('personality.note') }}</p>
+
+  @if (quick.available) {
+    <div class="rows personality">
+      <div class="row">
+        <ion-toggle
+          #quickToggle
+          justify="space-between"
+          [disabled]="busy()"
+          [checked]="quick.enabled()"
+          (ionChange)="setQuick($event.detail.checked)"
+        >
+          <span class="label">{{ t('quickNotif.toggle') }}</span>
+          <span class="sub">{{ t('quickNotif.toggleSub') }}</span>
+        </ion-toggle>
+      </div>
+    </div>
+  }
 </section>

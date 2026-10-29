@@ -40,6 +40,13 @@
   margin: 4px 0 0;
 }
 
+// Equivalente en la otra moneda: solo un dato, más discreto que el balance.
+.hero-fx {
+  margin: 4px 0 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 // Chip de balance negativo (design.md 10.5): fondo --negative y texto oscuro, que da 6:1 de contraste.
 .hero-alert {
   display: inline-flex;
@@ -305,11 +312,6 @@ li + li .row {
 }
 
 .row > .avatar,
-.row > .check {
-  grid-area: avatar;
-  align-self: center;
-}
-
 .row-text {
   display: contents;
 }
@@ -322,16 +324,8 @@ li + li .row {
   grid-area: sub;
 }
 
-.row-tags {
-  grid-area: tags;
-}
-
 .row-amount {
   grid-area: amount;
-}
-
-app-pending-banner.pending {
-  margin: 0 20px 12px;
 }
 
 /* Objetivo de las preguntas iniciales: lo primero que se ve bajo el saludo. */

@@ -193,10 +193,6 @@ li + li .row {
   transform: rotate(180deg);
 }
 
-.toggle-row + li .row {
-  border-top: 1px solid var(--line);
-}
-
 /* Bloque aparte de Privacidad, con el mismo espacio que su texto desplegado. */
 .update-rows {
   margin-top: 12px;
@@ -387,6 +383,12 @@ li + li .row {
       border-color: var(--accent);
     }
   }
+}
+
+/* Cita de la fuente de la tasa, que pide quien la publica. */
+.fx-source {
+  display: inline-block;
+  color: var(--accent);
 }
 
 .note.warn {

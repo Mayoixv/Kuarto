@@ -87,6 +87,10 @@ import {
   SqliteTransactionRepository,
 } from './infrastructure/repositories/sqlite-repositories';
 import { SecureSecrets } from './infrastructure/secure-secrets';
+import { OpenErApiRates } from './infrastructure/open-er-api-rates';
+import { GetExchangeRate, IExchangeRateSource } from './application/use-cases/exchange-rate';
+import { CheckBigExpense, PersonalitySettings } from './application/use-cases/personality';
+import { AddQuickExpense } from './application/use-cases/quick-expense';
 import { SqliteBackupStore } from './infrastructure/sqlite/sqlite-backup-store';
 import { CapacitorSqliteDatabase } from './infrastructure/sqlite/capacitor-sqlite-database';
 import { runMigrations } from './infrastructure/sqlite/migrations';
@@ -143,6 +147,10 @@ export interface AppContainer {
   restoreBackup: RestoreBackup;
   wipeAllData: WipeAllData;
   autoBackup: AutoBackup;
+  exchangeRate: GetExchangeRate;
+  personality: PersonalitySettings;
+  checkBigExpense: CheckBigExpense;
+  addQuickExpense: AddQuickExpense;
   accounts: IAccountRepository;
   saveAccount: SaveAccount;
   archiveAccount: ArchiveAccount;
@@ -185,9 +193,14 @@ export const APP_CONTAINER = new InjectionToken<AppContainer>('AppContainer');
 
 export const uuidGenerator: IdGenerator = { next: () => crypto.randomUUID() };
 
-export function buildContainer(repos: Repositories, ids: IdGenerator = uuidGenerator): AppContainer {
+export function buildContainer(
+  repos: Repositories,
+  ids: IdGenerator = uuidGenerator,
+  rates: IExchangeRateSource = new OpenErApiRates(),
+): AppContainer {
   const getMonthRecurringExpenses = new GetMonthRecurringExpenses(repos.recurring);
   const createBackup = new CreateBackup(repos.backup);
+  const getMonthOverview = new GetMonthOverview(repos.transactions, repos.categories, repos.savings);
   const addTransaction = new AddTransaction(repos.transactions, repos.categories, ids, repos.accounts);
   const addRecurringExpenses = new AddRecurringExpenses(repos.recurring, repos.categories, ids);
   const addSavingsGoal = new AddSavingsGoal(repos.savings, ids);
@@ -225,7 +238,7 @@ export function buildContainer(repos: Repositories, ids: IdGenerator = uuidGener
     addRecurringExpenses,
     updateRecurringExpense: new UpdateRecurringExpense(repos.recurring, repos.categories),
     removeRecurringExpense: new RemoveRecurringExpense(repos.recurring),
-    getMonthOverview: new GetMonthOverview(repos.transactions, repos.categories, repos.savings),
+    getMonthOverview,
     getDebtInstallments: new GetDebtInstallments(getDebtsOverview),
     getSubscriptionCost: new GetSubscriptionCost(repos.recurring, repos.categories),
     getReport: new GetReport(repos.transactions, repos.categories, repos.savings, repos.accounts, getMonthRecurringExpenses),
@@ -254,6 +267,10 @@ export function buildContainer(repos: Repositories, ids: IdGenerator = uuidGener
     restoreBackup: new RestoreBackup(repos.backup),
     wipeAllData: new WipeAllData(repos.backup),
     autoBackup: new AutoBackup(repos.settings, createBackup, repos.secrets),
+    exchangeRate: new GetExchangeRate(repos.settings, rates),
+    personality: new PersonalitySettings(repos.settings),
+    checkBigExpense: new CheckBigExpense(repos.categories, getMonthOverview),
+    addQuickExpense: new AddQuickExpense(repos.categories, repos.transactions, repos.accounts, repos.settings, addTransaction),
     accounts: repos.accounts,
     saveAccount,
     archiveAccount: new ArchiveAccount(repos.accounts),

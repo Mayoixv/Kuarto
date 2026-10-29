@@ -24,15 +24,19 @@ export class NewsService {
   private readonly container = inject(APP_CONTAINER);
   private readonly modals = inject(ModalController);
 
-  /** Al abrir la app: si se actualizó desde la última vez, muestra lo nuevo. En una instalación nueva no muestra nada. */
-  async showIfUpdated(): Promise<void> {
+  /**
+   * Al abrir la app: si se actualizó desde la última vez, muestra lo nuevo y devuelve true.
+   * En una instalación nueva no muestra nada.
+   */
+  async showIfUpdated(): Promise<boolean> {
     const seen = (await this.container.settings.get(SEEN_KEY)) || null;
-    if (seen === APP_VERSION) return;
+    if (seen === APP_VERSION) return false;
     await this.container.settings.set(SEEN_KEY, APP_VERSION);
     // Quien empieza de cero ve la bienvenida; las novedades son para quien ya usaba la app.
-    if (await this.container.onboarding.needed()) return;
+    if (await this.container.onboarding.needed()) return false;
     const points = pointsSince(seen);
     if (points.length) await this.open(points);
+    return true;
   }
 
   /** Ajustes › Novedades: lo de la versión instalada. */
@@ -47,5 +51,7 @@ export class NewsService {
       cssClass: 'select-modal',
     });
     await sheet.present();
+    // Hasta cerrarla: lo que viene después al abrir la app (pedir el nombre) no debe taparla.
+    await sheet.onDidDismiss();
   }
 }
