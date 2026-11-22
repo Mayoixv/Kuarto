@@ -323,6 +323,22 @@ export const MIGRATIONS: Migration[] = [
         WHERE EXISTS (SELECT 1 FROM settings) OR EXISTS (SELECT 1 FROM transactions)`,
     ],
   },
+  {
+    version: 17,
+    name: 'índices para los saldos y las listas por mes',
+    // Solo índices: no cambian datos. Cubren las consultas que recorrían tablas enteras al crecer el historial.
+    statements: [
+      `CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_splits_transaction ON transaction_splits(transaction_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_transfers_from ON transfers(from_account, date)`,
+      `CREATE INDEX IF NOT EXISTS idx_transfers_to ON transfers(to_account, date)`,
+      `CREATE INDEX IF NOT EXISTS idx_contributions_account ON savings_contributions(account_id, date)`,
+      `CREATE INDEX IF NOT EXISTS idx_contributions_goal ON savings_contributions(goal_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_instances_month ON recurring_instances(month)`,
+      `CREATE INDEX IF NOT EXISTS idx_instances_transaction ON recurring_instances(transaction_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_debt_payments_debt ON debt_payments(debt_id, date)`,
+    ],
+  },
 ];
 
 /** Aplica las migraciones pendientes en orden y devuelve las versiones aplicadas. */

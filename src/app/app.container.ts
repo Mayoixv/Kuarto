@@ -216,6 +216,7 @@ export function buildContainer(
   const getAccountsOverview = new GetAccountsOverview(repos.accounts);
   const getBudgetStatuses = new GetBudgetStatuses(repos.budgets, repos.transactions);
   const getUpcomingRecurring = new GetUpcomingRecurring(getMonthRecurringExpenses);
+  const getCardsToPay = new GetCardsToPay(getAccountsOverview, getCardStatuses);
   const getMonthHistory = new GetMonthHistory(repos.transactions, repos.categories, repos.savings);
   return {
     categories: repos.categories,
@@ -277,10 +278,10 @@ export function buildContainer(
     deleteAccount: new DeleteAccount(repos.accounts),
     adjustAccountBalance,
     getAccountsOverview,
-    canAfford: new CanAfford(getMonthHistory, getAccountsOverview, getMonthRecurringExpenses, repos.categories),
+    canAfford: new CanAfford(getMonthHistory, getAccountsOverview, getMonthRecurringExpenses, repos.categories, getCardsToPay, repos.transactions),
     setCardMinimum: new SetCardMinimum(repos.settings),
     getNetWorth: new GetNetWorth(getAccountsOverview, getDebtsOverview, repos.savings),
-    getCardsToPay: new GetCardsToPay(getAccountsOverview, getCardStatuses),
+    getCardsToPay,
     getCardStatuses,
     saveTransfer: new SaveTransfer(repos.accounts, ids),
     deleteTransfer: new DeleteTransfer(repos.accounts),

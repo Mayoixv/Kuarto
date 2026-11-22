@@ -1236,6 +1236,11 @@
     "dbFailed": "Não foi possível abrir o banco de dados local. Feche e abra o app de novo.\n\nDetalhe: {detail}"
   },
   "changelog": {
+    "1_0_17": [
+      "Dá para comprar? agora olha o mês dia a dia: diz que dia e que pagamento deixariam você sem dinheiro, o ponto mais baixo do mês e a partir de quando dá para comprar.",
+      "Ao escrever ou ditar um movimento, o Kuarto também entende a conta («com o cartão Popular»), a data («ontem», «há 3 dias») e as etiquetas (#viagem), e tolera uma letra errada.",
+      "O app responde mais rápido quando há muitos movimentos."
+    ],
     "1_0_16": [
       "Câmbio do dia: no Início e em Ajustes você vê quanto é seu saldo na outra moeda (peso ou dólar). É só uma referência: seus valores não mudam.",
       "Nova opção \"Personalidade\" em Ajustes › Fixos e avisos: com \"Engraçada\", o Kuarto conta uma piada quando você registra um gasto grande.",
@@ -1741,12 +1746,15 @@
       "other": "Cerca de {amount} por dia durante {count} dias."
     },
     "short": "Faltariam {amount}.",
-    "waitSub": "Nesse dia você recebe e aí dá.",
-    "pending": "Já foram descontados {amount} de contas fixas que faltam pagar este mês.",
+    "waitSub": "A partir desse dia você pode comprar sem deixar nenhum pagamento descoberto.",
+    "pending": "Já foram descontados {amount} de fixos e cartões que faltam pagar este mês.",
     "hint": "Primeiro usa o dinheiro deste mês: o que entrou menos o que você gastou e guardou. Abaixo, a resposta contando tudo o que você tem em contas e dinheiro.",
     "monthTitle": "Com o dinheiro deste mês",
     "totalTitle": "Contando todo o seu patrimônio",
-    "totalLeft": "Sobrariam {amount} no total."
+    "totalLeft": "Sobrariam {amount} no total.",
+    "lowest": "O ponto mais baixo seria {amount} em {date}.",
+    "bottleneck": "Em {date} você ficaria sem dinheiro ao pagar {label}.",
+    "bottleneckSpending": "Em {date} você ficaria sem dinheiro no seu ritmo de gastos."
   },
   "recap": {
     "title": "Seu mês em 30 segundos",

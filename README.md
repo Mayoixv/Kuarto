@@ -87,7 +87,7 @@ cd android && ./gradlew assembleDebug
 
 ### Publicar una versión
 
-1. Sube el número en `src/app/version.ts`, en `package.json` (`npm version X.Y.Z --no-git-tag-version`, que también cambia `package-lock.json`) y `versionCode` / `versionName` en `android/app/build.gradle`. Agrega la versión a `src/app/ui/news/changelog.ts` con sus novedades. `npm test` falla si alguno no coincide.
+1. `node scripts/release-bump.mjs X.Y.Z "Novedad 1" "Novedad 2"` sube el número en `src/app/version.ts`, `package.json`, `package-lock.json` y `android/app/build.gradle` (`versionCode` + 1), agrega la versión a `src/app/ui/news/changelog.ts` y escribe las novedades en los seis `src/assets/i18n/<idioma>.json`; en los idiomas que no son español quedan en español hasta que las traduzcas. `npm test` falla si algún archivo no coincide.
    Sube también `package.json` y `package-lock.json` con el resto de los cambios.
 2. Compila con `./gradlew assembleRelease`. La firma se lee de `../../firma/keystore.properties`, fuera del repositorio; sin ese archivo el APK sale sin firmar.
 3. Crea un Release en GitHub con la etiqueta `vX.Y.Z` y adjunta el APK como `Kuarto-X.Y.Z.apk`.

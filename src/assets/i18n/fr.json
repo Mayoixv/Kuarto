@@ -1236,6 +1236,11 @@
     "dbFailed": "Impossible d'ouvrir la base de données locale. Fermez et rouvrez l'appli.\n\nDétail : {detail}"
   },
   "changelog": {
+    "1_0_17": [
+      "Je peux me le permettre ? regarde maintenant le mois jour par jour : il vous dit quel jour et quel paiement vous laisseraient à court, le point le plus bas du mois et à partir de quand vous pouvez l'acheter.",
+      "Quand vous écrivez ou dictez un mouvement, Kuarto comprend aussi le compte (« avec la carte Popular »), la date (« hier », « il y a 3 jours ») et les étiquettes (#voyage), et tolère une faute de frappe.",
+      "L'application répond plus vite quand il y a beaucoup de mouvements."
+    ],
     "1_0_16": [
       "Taux de change du jour : l'Accueil et les Réglages montrent votre solde dans l'autre devise (peso ou dollar). À titre indicatif : vos montants ne changent pas.",
       "Nouvelle option « Personnalité » dans Réglages › Fixes et rappels : avec « Drôle », Kuarto vous raconte une blague quand vous notez une grosse dépense.",
@@ -1740,12 +1745,15 @@
       "other": "Environ {amount} par jour pendant {count} jours."
     },
     "short": "Il vous manquerait {amount}.",
-    "waitSub": "Vous êtes payé ce jour-là et ça passe.",
-    "pending": "{amount} de dépenses fixes encore à payer ce mois-ci sont déjà déduits.",
+    "waitSub": "À partir de ce jour, vous pouvez l'acheter sans laisser aucun paiement à découvert.",
+    "pending": "{amount} de charges fixes et de cartes encore à payer ce mois-ci ont déjà été déduits.",
     "hint": "D'abord avec l'argent de ce mois : ce qui est entré moins ce que vous avez dépensé et épargné. En dessous, la réponse en comptant tout ce que vous avez en comptes et en espèces.",
     "monthTitle": "Avec l'argent de ce mois-ci",
     "totalTitle": "En comptant tout votre patrimoine",
-    "totalLeft": "Il vous resterait {amount} au total."
+    "totalLeft": "Il vous resterait {amount} au total.",
+    "lowest": "Le point le plus bas serait {amount} le {date}.",
+    "bottleneck": "Le {date}, vous seriez à court en payant {label}.",
+    "bottleneckSpending": "Le {date}, vous seriez à court à votre rythme de dépenses."
   },
   "recap": {
     "title": "Votre mois en 30 secondes",

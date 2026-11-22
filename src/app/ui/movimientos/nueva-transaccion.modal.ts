@@ -22,7 +22,7 @@ import { APP_CONTAINER } from '../../app.container';
 import { Category, isExpenseType } from '../../domain/category';
 import { monthOf } from '../../domain/month';
 import { normalizeTags, Transaction } from '../../domain/transaction';
-import { amountToInput, defaultDateFor, formatDay, formatMoney, parseAmount } from '../format';
+import { amountToInput, defaultDateFor, formatDay, formatMoney, parseAmount, todayIso } from '../format';
 import { CurrencyState } from '../currency-state';
 import { photoToDataUrl, pickImage } from '../image';
 import { MonthState } from '../month-state';
@@ -206,13 +206,16 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
       .filter((tx) => tx.note)
       .slice(-500)
       .map((tx) => ({ note: tx.note, categoryId: tx.categoryId }));
-    const entry = parseQuickEntry(text, this.categories(), this.history);
+    const entry = parseQuickEntry(text, this.categories(), this.history, { accounts: this.accounts(), today: todayIso() });
     if (entry.kind && entry.kind !== this.kind()) {
       this.kind.set(entry.kind);
       this.categoryId.set(null);
     }
     if (entry.amount !== null) this.amount.set(amountToInput(entry.amount));
     if (entry.categoryId) this.categoryId.set(entry.categoryId);
+    if (entry.accountId) this.accountId.set(entry.accountId);
+    if (entry.date) this.date.set(entry.date);
+    if (entry.tags.length) this.tags.set(entry.tags.join(', '));
     this.note.set(entry.note);
   }
 

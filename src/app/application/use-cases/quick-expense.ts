@@ -30,7 +30,8 @@ export class AddQuickExpense {
       .filter((tx) => tx.note)
       .slice(-500)
       .map((tx) => ({ note: tx.note, categoryId: tx.categoryId }));
-    const entry = parseQuickEntry(text, all, history);
+    const accounts = await this.accounts.list();
+    const entry = parseQuickEntry(text, all, history, { accounts, today: date });
     if (!entry.amount) throw new ValidationError('quickAmount');
 
     const expense = (id: string | null | undefined) => all.find((c) => c.id === id && c.type !== 'ingreso' && !c.hidden);
@@ -42,9 +43,16 @@ export class AddQuickExpense {
     if (!category) throw new ValidationError('quickCategory');
 
     const last = await this.settings.get(LAST_ACCOUNT_KEY);
-    const account = last ? await this.accounts.get(last) : undefined;
-    const accountId = account && !account.archived ? account.id : CASH_ACCOUNT_ID;
+    const account = accounts.find((a) => a.id === (entry.accountId ?? last) && !a.archived);
+    const accountId = account?.id ?? CASH_ACCOUNT_ID;
 
-    return this.addTransaction.execute({ date, amount: entry.amount, categoryId: category.id, note: entry.note, accountId });
+    return this.addTransaction.execute({
+      date: entry.date ?? date,
+      amount: entry.amount,
+      categoryId: category.id,
+      note: entry.note,
+      tags: entry.tags,
+      accountId,
+    });
   }
 }

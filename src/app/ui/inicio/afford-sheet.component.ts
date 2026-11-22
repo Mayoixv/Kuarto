@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { IonIcon, IonInput, ModalController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -48,6 +49,7 @@ const ICONS = { si: 'checkmark-circle', justo: 'alert-circle', espera: 'time-out
                     {{ t('afford.waitSub') }}
                   }
                 }
+                <ng-container *ngTemplateOutlet="dip; context: { $implicit: r }" />
               </p>
             </div>
           </div>
@@ -58,6 +60,7 @@ const ICONS = { si: 'checkmark-circle', justo: 'alert-circle', espera: 'time-out
               <p class="answer">{{ t('afford.verdict.' + a.total.verdict, { date: a.total.waitUntil ? day(a.total.waitUntil) : '' }) }}</p>
               <p class="detail">
                 {{ a.total.left >= 0 ? t('afford.totalLeft', { amount: money(a.total.left) }) : t('afford.short', { amount: money(-a.total.left) }) }}
+                <ng-container *ngTemplateOutlet="dip; context: { $implicit: a.total }" />
               </p>
             </div>
           </div>
@@ -69,6 +72,14 @@ const ICONS = { si: 'checkmark-circle', justo: 'alert-circle', espera: 'time-out
         }
       </div>
     </div>
+    <!-- El bache del mes: qué día y qué pago dejan corto, o el punto más bajo si nunca llega a faltar. -->
+    <ng-template #dip let-r>
+      @if (r.bottleneck; as b) {
+        {{ b.label ? t('afford.bottleneck', { date: day(b.date), label: b.label }) : t('afford.bottleneckSpending', { date: day(b.date) }) }}
+      } @else if (r.lowest < r.left) {
+        {{ t('afford.lowest', { amount: money(r.lowest), date: day(r.lowestDate) }) }}
+      }
+    </ng-template>
   `,
   styles: `
     .sheet-form {
@@ -174,7 +185,7 @@ const ICONS = { si: 'checkmark-circle', justo: 'alert-circle', espera: 'time-out
       color: var(--muted-on-light);
     }
   `,
-  imports: [IonIcon, IonInput],
+  imports: [IonIcon, IonInput, NgTemplateOutlet],
 })
 export class AffordSheetComponent {
   private readonly container = inject(APP_CONTAINER);

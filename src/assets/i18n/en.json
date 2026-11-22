@@ -1236,6 +1236,11 @@
     "dbFailed": "Couldn't open the local database. Close and reopen the app.\n\nDetails: {detail}"
   },
   "changelog": {
+    "1_0_17": [
+      "Can I afford it? now looks at the month day by day: it tells you which day and which payment would leave you short, the lowest point of the month and from when you can buy it.",
+      "When you type or dictate a movement, Kuarto also understands the account (\"with the Popular card\"), the date (\"yesterday\", \"3 days ago\") and the tags (#trip), and forgives one typo.",
+      "The app responds faster when there are many movements."
+    ],
     "1_0_16": [
       "Daily exchange rate: Home and Settings show your balance in the other currency (peso or dollar). Just for reference: your amounts do not change.",
       "New \"Personality\" option in Settings › Recurring and reminders: with \"Funny\", Kuarto tells you a joke when you log a big expense.",
@@ -1733,12 +1738,15 @@
       "other": "About {amount} a day for {count} days."
     },
     "short": "You'd be {amount} short.",
-    "waitSub": "You get paid that day and it'll fit.",
-    "pending": "{amount} in bills still due this month is already taken out.",
+    "waitSub": "From that day you can buy it without leaving any payment uncovered.",
+    "pending": "{amount} in fixed payments and cards still due this month were already subtracted.",
     "hint": "First it uses this month's money: what came in minus what you spent and saved. Below you'll see the answer counting everything in your accounts and cash.",
     "monthTitle": "With this month's money",
     "totalTitle": "Counting your whole net worth",
-    "totalLeft": "You'd have {amount} left in total."
+    "totalLeft": "You'd have {amount} left in total.",
+    "lowest": "The lowest point would be {amount} on {date}.",
+    "bottleneck": "On {date} you'd come up short when paying {label}.",
+    "bottleneckSpending": "On {date} you'd come up short at your spending pace."
   },
   "recap": {
     "title": "Your month in 30 seconds",

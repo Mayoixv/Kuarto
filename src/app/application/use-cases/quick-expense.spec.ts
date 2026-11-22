@@ -36,6 +36,13 @@ describe('registro rápido desde la notificación', () => {
     expect(await quick.execute('800 cumpleaños', '2026-10-29')).toMatchObject({ categoryId: 'cat-comida', accountId: 'acc-banco' });
   });
 
+  it('entiende la cuenta, la fecha y las etiquetas de la frase', async () => {
+    const { quick, accounts } = setup();
+    accounts.items.set('acc-popular', { id: 'acc-popular', name: 'Tarjeta Popular', type: 'tarjeta', initialBalance: 0, archived: false });
+    const saved = await quick.execute('500 gasolina con la tarjeta popular ayer #viaje', '2026-10-29');
+    expect(saved).toMatchObject({ accountId: 'acc-popular', date: '2026-10-28', tags: ['viaje'], note: 'Gasolina' });
+  });
+
   it('nunca lo guarda como ingreso y rechaza un texto sin monto', async () => {
     const { quick, transactions } = setup();
     expect((await quick.execute('500 salario', '2026-10-29')).categoryId).not.toBe('cat-salario');

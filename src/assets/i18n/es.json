@@ -1233,6 +1233,11 @@
     "dbFailed": "No se pudo abrir la base de datos local. Cierra y vuelve a abrir la aplicación.\n\nDetalle: {detail}"
   },
   "changelog": {
+    "1_0_17": [
+      "¿Me alcanza? ahora mira el mes día por día: te dice qué día y qué pago te dejarían corto, el punto más bajo del mes y desde cuándo sí puedes comprarlo.",
+      "Al escribir o dictar un movimiento, Kuarto entiende también la cuenta («con la tarjeta popular»), la fecha («ayer», «hace 3 días») y las etiquetas (#viaje), y tolera una letra mal escrita.",
+      "La app responde más rápido cuando hay muchos movimientos."
+    ],
     "1_0_16": [
       "Tipo de cambio del día: en Inicio y en Ajustes ves cuánto es tu balance en la otra moneda (peso o dólar). Es solo un dato: tus montos no cambian.",
       "Nueva opción \"Personalidad\" en Ajustes › Fijos y avisos: con \"Chistosa\", Kuarto te cuenta un chiste cuando anotas un gasto grande.",
@@ -1731,12 +1736,15 @@
       "other": "Unos {amount} por día durante {count} días."
     },
     "short": "Te faltarían {amount}.",
-    "waitSub": "Ese día cobras y ya te alcanza.",
-    "pending": "Ya se restaron {amount} de fijos que faltan por pagar este mes.",
+    "waitSub": "Desde ese día puedes comprarlo sin dejar ningún pago sin cubrir.",
+    "pending": "Ya se restaron {amount} de fijos y tarjetas que faltan por pagar este mes.",
     "hint": "Primero usa el dinero de este mes: lo que entró menos lo que gastaste y ahorraste. Abajo verás la respuesta contando todo lo que tienes en cuentas y efectivo.",
     "monthTitle": "Con el dinero de este mes",
     "totalTitle": "Contando todo tu patrimonio",
-    "totalLeft": "Te quedarían {amount} en total."
+    "totalLeft": "Te quedarían {amount} en total.",
+    "lowest": "El punto más bajo sería {amount} el {date}.",
+    "bottleneck": "El {date} te quedarías corto al pagar {label}.",
+    "bottleneckSpending": "El {date} te quedarías corto con tu ritmo de gasto."
   },
   "recap": {
     "title": "Tu mes en 30 segundos",

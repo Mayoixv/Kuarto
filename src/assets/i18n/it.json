@@ -1236,6 +1236,11 @@
     "dbFailed": "Impossibile aprire il database locale. Chiudi e riapri l'app.\n\nDettaglio: {detail}"
   },
   "changelog": {
+    "1_0_17": [
+      "Me lo posso permettere? ora guarda il mese giorno per giorno: ti dice quale giorno e quale pagamento ti lascerebbero a corto, il punto più basso del mese e da quando puoi comprarlo.",
+      "Quando scrivi o detti un movimento, Kuarto capisce anche il conto («con la carta Popular»), la data («ieri», «3 giorni fa») e le etichette (#viaggio), e tollera una lettera sbagliata.",
+      "L'app risponde più veloce quando ci sono molti movimenti."
+    ],
     "1_0_16": [
       "Cambio del giorno: in Home e in Impostazioni vedi il tuo saldo nell'altra valuta (peso o dollaro). Solo come riferimento: i tuoi importi non cambiano.",
       "Nuova opzione «Personalità» in Impostazioni › Fisse e promemoria: con «Divertente», Kuarto ti racconta una battuta quando registri una spesa grande.",
@@ -1740,12 +1745,15 @@
       "other": "Circa {amount} al giorno per {count} giorni."
     },
     "short": "Ti mancherebbero {amount}.",
-    "waitSub": "Quel giorno ricevi lo stipendio e ci stai dentro.",
-    "pending": "Sono già tolti {amount} di spese fisse ancora da pagare questo mese.",
+    "waitSub": "Da quel giorno puoi comprarlo senza lasciare scoperto nessun pagamento.",
+    "pending": "Sono già stati sottratti {amount} di spese fisse e carte ancora da pagare questo mese.",
     "hint": "Prima usa i soldi di questo mese: quello che è entrato meno quello che hai speso e risparmiato. Sotto, la risposta contando tutto quello che hai su conti e contanti.",
     "monthTitle": "Con i soldi di questo mese",
     "totalTitle": "Contando tutto il tuo patrimonio",
-    "totalLeft": "Ti resterebbero {amount} in totale."
+    "totalLeft": "Ti resterebbero {amount} in totale.",
+    "lowest": "Il punto più basso sarebbe {amount} il {date}.",
+    "bottleneck": "Il {date} resteresti a corto pagando {label}.",
+    "bottleneckSpending": "Il {date} resteresti a corto con il tuo ritmo di spesa."
   },
   "recap": {
     "title": "Il tuo mese in 30 secondi",
