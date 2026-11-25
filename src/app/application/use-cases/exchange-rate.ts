@@ -1,4 +1,5 @@
 import { IsoDate } from '../../domain/month';
+import { ValidationError } from '../errors';
 import { ISettingsRepository } from '../ports/repositories';
 
 /** Tasa del día: pesos por un dólar. Solo se usa para mostrar equivalentes; nunca convierte montos guardados. */
@@ -19,6 +20,11 @@ interface StoredRate extends ExchangeRate {
 }
 
 const KEY = 'fx_usd_dop';
+/** Tasa que fija el usuario (la de su banco, o sin internet): manda sobre la del servicio hasta que la quite. */
+const MANUAL_KEY = 'fx_manual';
+/** Límites razonables de pesos por dólar, para no aceptar un error de tipeo como 5.9 o 59000. */
+export const MANUAL_RATE_MIN = 1;
+export const MANUAL_RATE_MAX = 1000;
 
 export class GetExchangeRate {
   constructor(
@@ -26,8 +32,28 @@ export class GetExchangeRate {
     private readonly source: IExchangeRateSource,
   ) {}
 
-  /** La última tasa guardada, sin conexión. */
+  /** La tasa propia del usuario, si fijó una. */
+  async manual(): Promise<ExchangeRate | null> {
+    try {
+      const saved = JSON.parse((await this.settings.get(MANUAL_KEY)) || 'null') as ExchangeRate | null;
+      return saved && saved.usdToDop > 0 && saved.date ? saved : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Fija (o quita, con null) la tasa propia. */
+  async setManual(usdToDop: number | null, today: IsoDate): Promise<void> {
+    if (usdToDop === null) return this.settings.set(MANUAL_KEY, '');
+    if (!Number.isFinite(usdToDop) || usdToDop < MANUAL_RATE_MIN || usdToDop > MANUAL_RATE_MAX) throw new ValidationError('fxRate');
+    await this.settings.set(MANUAL_KEY, JSON.stringify({ usdToDop, date: today }));
+  }
+
+  /** La tasa que se usa sin conexión: la propia si hay, si no la última consultada. */
   async cached(): Promise<StoredRate | null> {
+    const manual = await this.manual();
+    // Con tasa propia no se consulta el servicio: "checked" en el futuro hace que refresh no lo llame.
+    if (manual) return { ...manual, checked: '9999-12-31' };
     try {
       const saved = JSON.parse((await this.settings.get(KEY)) || 'null') as StoredRate | null;
       return saved && saved.usdToDop > 0 && saved.date && saved.checked ? saved : null;

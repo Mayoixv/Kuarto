@@ -226,3 +226,93 @@ li + li .cat {
   color: var(--negative-on-light);
   font-size: 15px;
 }
+
+/* Salud financiera: cada indicador con una barra de color a la izquierda según su nivel (y el texto lo dice). */
+.health {
+  margin: 0 0 12px;
+
+  .health-row {
+    padding: 10px 0 10px 12px;
+    border-left: 4px solid var(--line-strong);
+
+    & + .health-row {
+      margin-top: 8px;
+    }
+
+    &.bueno {
+      border-left-color: var(--received-on-light);
+    }
+    &.medio {
+      border-left-color: var(--pending);
+    }
+    &.bajo {
+      border-left-color: var(--overdue-on-light);
+    }
+  }
+
+  dt {
+    font-size: 15px;
+    color: var(--muted-on-light);
+  }
+
+  dd {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 2px 0 0;
+
+    strong {
+      font-size: 20px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    span {
+      font-size: 15px;
+      line-height: 1.4;
+    }
+  }
+}
+
+/* Gasto por comercio y por etiqueta. */
+.groups {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'name total' 'count total';
+    align-items: center;
+    min-height: 48px;
+    padding: 6px 0;
+    border-top: 1px solid var(--line);
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
+}
+
+.group-name {
+  grid-area: name;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-count {
+  grid-area: count;
+  font-size: 13px;
+  color: var(--muted-on-light);
+}
+
+.group-total {
+  grid-area: total;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

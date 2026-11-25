@@ -31,9 +31,11 @@ import { APP_CONTAINER } from '../../app.container';
 import { DeletedTransaction } from '../../application/use-cases/delete-transaction';
 import { Account, CASH_ACCOUNT_ID, Transfer } from '../../domain/account';
 import { Category, isExpenseType } from '../../domain/category';
-import { adjustmentText, DineroFormService } from '../dinero/dinero-form.service';
+import { adjustmentText, DineroFormService, transferAmountText, transferArrivedText } from '../dinero/dinero-form.service';
+import { MoneyConverter } from '../../application/use-cases/money-converter';
+import { inAmountRange, parseAmountFilter } from '../../domain/amount-filter';
 import { Transaction } from '../../domain/transaction';
-import { formatDay, formatMoney } from '../format';
+import { formatAccountMoney, formatDay, formatMoney } from '../format';
 import { DropdownComponent } from '../dropdown.component';
 import { MonthSwitcherComponent } from '../month-switcher.component';
 import { MonthState } from '../month-state';
@@ -119,6 +121,7 @@ export class MovimientosPage {
   protected readonly accountFilter = signal<string | null>(null);
   protected readonly accountMenuOpen = signal(false);
   private readonly transfers = signal<Transfer[]>([]);
+  private readonly converter = signal(MoneyConverter.identity());
   protected readonly kindOptions = computed<PillOption[]>(() =>
     ['todos', 'gasto', 'ingreso'].map((value) => ({ value, label: t(`movs.kinds.${value}`) })),
   );
@@ -159,30 +162,36 @@ export class MovimientosPage {
   protected readonly visibleTransfers = computed(() => {
     if (this.kindFilter() !== 'todos' || this.categoryFilter()) return [];
     const names = new Map(this.accounts().map((a) => [a.id, a.name]));
+    const byId = new Map(this.accounts().map((a) => [a.id, a]));
     const account = this.accountFilter();
-    const words = fold(this.search()).split(/\s+/).filter(Boolean);
+    const query = this.query();
+    const words = fold(query.text).split(/\s+/).filter(Boolean);
     return this.transfers()
       .filter(
         (tr) =>
-          !account || tr.fromAccountId === account || tr.toAccountId === account,
+          (!account || tr.fromAccountId === account || tr.toAccountId === account) && inAmountRange(tr.amount, query),
       )
       .map((tr) => {
-        const adjustment = adjustmentText(tr, names);
+        const adjustment = adjustmentText(tr, names, byId);
         const title = adjustment?.title ?? `${names.get(tr.fromAccountId) ?? t('cuentas.account')} → ${names.get(tr.toAccountId) ?? t('cuentas.account')}`;
         return {
           transfer: tr,
           adjustment: !!adjustment,
           title,
-          sub: `${tr.note ? tr.note + ' · ' : ''}${formatDay(tr.date)}`,
-          amount: adjustment?.amount ?? formatMoney(tr.amount),
+          sub: [transferArrivedText(tr, byId), tr.note, formatDay(tr.date)].filter(Boolean).join(' · '),
+          amount: adjustment?.amount ?? transferAmountText(tr, byId),
           haystack: fold(`${title} ${tr.note}`),
         };
       })
       .filter((r) => words.every((w) => r.haystack.includes(w)));
   });
 
+  /** La búsqueda separada en texto y montos (">500", "<1000", "500-1000"). */
+  private readonly query = computed(() => parseAmountFilter(this.search()));
+
   protected readonly visible = computed(() => {
-    const words = fold(this.search()).split(/\s+/).filter(Boolean);
+    const query = this.query();
+    const words = fold(query.text).split(/\s+/).filter(Boolean);
     const kind = this.kindFilter();
     const category = this.categoryFilter();
     const account = this.accountFilter();
@@ -192,17 +201,19 @@ export class MovimientosPage {
         (!category || r.categoryIds.includes(category)) &&
         (!account ||
           (r.transaction.accountId ?? CASH_ACCOUNT_ID) === account) &&
+        inAmountRange(r.transaction.amount, query) &&
         words.every((w) => r.haystack.includes(w)),
     );
   });
 
-  protected readonly visibleTotal = computed(() =>
-    this.visible().reduce(
-      (sum, r) =>
-        sum + (r.isIncome ? r.transaction.amount : -r.transaction.amount),
-      0,
-    ),
-  );
+  /** Neto de lo que se ve, en la moneda principal (convierte los movimientos de cuentas en otra moneda). */
+  protected readonly visibleTotal = computed(() => {
+    const c = this.converter();
+    return this.visible().reduce((sum, r) => {
+      const amount = c.ofAccount(r.transaction.amount, r.transaction.accountId);
+      return sum + (r.isIncome ? amount : -amount);
+    }, 0);
+  });
 
   protected readonly money = formatMoney;
 
@@ -464,15 +475,18 @@ export class MovimientosPage {
   private async load(month: string) {
     const seq = ++this.loadSeq;
     try {
-      const [transactions, categories, accounts, transfers] = await Promise.all(
+      const [transactions, categories, accounts, transfers, converter] = await Promise.all(
         [
           this.container.transactions.listByMonth(month),
           this.container.categories.list(),
           this.container.accounts.list(),
           this.container.accounts.listTransfers(month),
+          this.container.loadConverter.execute(),
         ],
       );
       if (seq !== this.loadSeq) return;
+      this.converter.set(converter);
+      const accountById = new Map(accounts.map((a) => [a.id, a]));
       this.accounts.set(accounts);
       this.transfers.set(transfers);
       const byId = new Map(categories.map((c) => [c.id, c]));
@@ -480,7 +494,7 @@ export class MovimientosPage {
       this.rows.set(
         [...transactions]
           .sort((a, b) => b.date.localeCompare(a.date))
-          .map((tx) => toRow(tx, byId)),
+          .map((tx) => toRow(tx, byId, accountById)),
       );
       this.failed.set(false);
     } catch (error) {
@@ -490,7 +504,7 @@ export class MovimientosPage {
   }
 }
 
-function toRow(tx: Transaction, byId: Map<string, Category>): Row {
+function toRow(tx: Transaction, byId: Map<string, Category>, accounts: Map<string, Account>): Row {
   const category = byId.get(tx.categoryId);
   const isIncome = category?.type === 'ingreso';
   const categoryName = category?.name ?? t('common.noCategory');
@@ -506,7 +520,7 @@ function toRow(tx: Transaction, byId: Map<string, Category>): Row {
     ...lookOf(category ?? { type: isIncome ? 'ingreso' : 'variable' }),
     title: tx.note || categoryName,
     subtitle: `${split ? t('movs.splitName', { name: categoryName, count: tx.splits!.length - 1 }) : categoryName} · ${formatDay(tx.date)}`,
-    amount: `${isIncome ? '+' : '−'}${formatMoney(tx.amount)}`,
+    amount: `${isIncome ? '+' : '−'}${formatAccountMoney(tx.amount, accounts.get(tx.accountId ?? CASH_ACCOUNT_ID))}`,
     isIncome,
     tags,
     hasPhotos: (tx.attachmentCount ?? 0) > 0,

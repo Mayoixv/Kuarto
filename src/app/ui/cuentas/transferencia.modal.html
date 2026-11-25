@@ -32,12 +32,28 @@
       ></ion-input>
     </div>
 
+    @if (crossCurrency()) {
+      <div class="field">
+        <ion-input
+          [label]="t('transfer.arrives', { currency: toCurrency() })"
+          label-placement="floating"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          [placeholder]="suggestedToAmount() !== null ? amountToInput(suggestedToAmount()!) : '0.00'"
+          [value]="toAmount()"
+          (ionInput)="toAmount.set(($event.detail.value ?? '').toString())"
+        ></ion-input>
+      </div>
+      <p class="hint">{{ rateText() ? t('transfer.arrivesHint', { rate: rateText()! }) : t('transfer.arrivesNoRate') }}</p>
+    }
+
     @if (preview(); as rows) {
       <dl class="preview" aria-live="polite">
         @for (r of rows; track r.name) {
           <div class="preview-row">
             <dt>{{ r.name }}</dt>
-            <dd><span>{{ money(r.before) }}</span><span class="arrow" [attr.aria-label]="t('common.becomes')">→</span><strong [class.negative]="r.after < 0">{{ money(r.after) }}</strong></dd>
+            <dd><span>{{ money(r.before, r.account) }}</span><span class="arrow" [attr.aria-label]="t('common.becomes')">→</span><strong [class.negative]="r.after < 0">{{ money(r.after, r.account) }}</strong></dd>
           </div>
         }
       </dl>

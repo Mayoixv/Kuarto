@@ -115,6 +115,24 @@
       }
     }
 
+    @for (g of groupCards(r); track g.key) {
+      @if (g.items.length) {
+        <section class="card" [attr.aria-labelledby]="g.key + '-title'">
+          <h2 [id]="g.key + '-title'" class="card-title">{{ t('reports.' + g.key + '.title') }}</h2>
+          <p class="card-sub">{{ t('reports.' + g.key + '.sub') }}</p>
+          <ul class="groups">
+            @for (i of g.items; track i.name) {
+              <li>
+                <span class="group-name">{{ g.key === 'byTag' ? '#' + i.name : i.name }}</span>
+                <span class="group-count">{{ tn('reports.times', i.count) }}</span>
+                <span class="group-total">{{ money(i.total) }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+
     <section class="card" aria-labelledby="saldo-title">
       <h2 id="saldo-title" class="card-title">{{ t('reports.accounts') }}</h2>
       <p class="card-sub">{{ t('reports.accountsSub') }}</p>
@@ -125,6 +143,47 @@
         [name]="t('reports.accountsName')"
         color="var(--series-gastos)"
       ></app-line-chart>
+    </section>
+  }
+
+  @if (health(); as h) {
+    <section class="card" aria-labelledby="salud-title">
+      <h2 id="salud-title" class="card-title">{{ t('health.title') }}</h2>
+      @if (h.months === 0) {
+        <p class="card-sub">{{ t('health.noData') }}</p>
+      } @else {
+        <p class="card-sub">{{ tn('health.basis', h.months) }}</p>
+        <dl class="health">
+          @if (h.monthsCovered; as m) {
+            <div [class]="'health-row ' + m.level">
+              <dt>{{ t('health.covered') }}</dt>
+              <dd>
+                <strong>{{ tn('health.coveredValue', m.value, { months: m.value }) }}</strong>
+                <span>{{ t('health.coveredHint.' + m.level) }}</span>
+              </dd>
+            </div>
+          }
+          @if (h.savingsRate; as m) {
+            <div [class]="'health-row ' + m.level">
+              <dt>{{ t('health.rate') }}</dt>
+              <dd>
+                <strong>{{ percent(m.value) }}</strong>
+                <span>{{ t('health.rateHint.' + m.level) }}</span>
+              </dd>
+            </div>
+          }
+          @if (h.debtToIncome; as m) {
+            <div [class]="'health-row ' + m.level">
+              <dt>{{ t('health.debt') }}</dt>
+              <dd>
+                <strong>{{ percent(m.value) }}</strong>
+                <span>{{ t('health.debtHint.' + m.level) }}</span>
+              </dd>
+            </div>
+          }
+        </dl>
+        <p class="card-sub">{{ t('health.note') }}</p>
+      }
     </section>
   }
 </ion-content>

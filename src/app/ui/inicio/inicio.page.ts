@@ -14,7 +14,8 @@ import { APP_CONTAINER } from '../../app.container';
 import { MonthOverview } from '../../application/use-cases/get-month-overview';
 import { MonthlySummary } from '../../domain/monthly-summary';
 import { Transaction } from '../../domain/transaction';
-import { formatDay, formatMoney, formatPercent, monthLabel, todayIso } from '../format';
+import { formatAccountMoney, formatDay, formatMoney, formatPercent, monthLabel, todayIso } from '../format';
+import { CASH_ACCOUNT_ID } from '../../domain/account';
 import { MonthSwitcherComponent } from '../month-switcher.component';
 import { ExchangeRateService } from '../exchange-rate.service';
 import { MonthState } from '../month-state';
@@ -27,7 +28,7 @@ import { NetWorthCardComponent } from './net-worth-card.component';
 import { BalanceReelComponent } from '../balance-reel.component';
 import { ExpenseDonutComponent } from './expense-donut.component';
 import { LoadingComponent } from '../loading.component';
-import { t } from '../i18n';
+import { t, tn } from '../i18n';
 
 interface RecentRow {
   id: string;
@@ -79,6 +80,9 @@ export class InicioPage {
     organizar: { path: '/tabs/fijos' },
   };
   protected readonly recent = signal<RecentRow[]>([]);
+  /** Solo en el mes actual: lo libre por día después de lo que falta pagar (como "In My Pocket"). */
+  protected readonly freeDaily = signal<{ perDay: number; days: number; pending: number } | null>(null);
+  protected readonly tn = tn;
   /** Mes con resumen "en 30 segundos" para ofrecer: el que se ve si ya terminó, o el anterior en la primera semana. */
   protected readonly recapMonth = signal<MonthKey | null>(null);
   protected readonly label = (m: MonthKey) => monthLabel(m, false);
@@ -129,12 +133,17 @@ export class InicioPage {
     try {
       this.userName.set(await this.container.profile.name());
       this.goal.set(await this.container.profile.goal());
-      const [overview, categories] = await Promise.all([
+      const [overview, categories, accounts] = await Promise.all([
         this.container.getMonthOverview.execute(month),
         this.container.categories.list(),
+        this.container.accounts.list(),
       ]);
+      const accountById = new Map(accounts.map((a) => [a.id, a]));
       const recapMonth = await this.recapFor(month, overview);
+      const free =
+        month === monthOf(todayIso()) ? await this.container.canAfford.outlook(todayIso()).catch((e) => (console.error(e), null)) : null;
       if (seq !== this.loadSeq) return;
+      this.freeDaily.set(free);
       this.overview.set(overview);
       this.recapMonth.set(recapMonth);
       this.categories.set(categories);
@@ -148,7 +157,7 @@ export class InicioPage {
             ...lookOf(category ?? { type: isIncome ? 'ingreso' : 'variable' }),
             title: tx.note || name,
             subtitle: `${name} · ${formatDay(tx.date)}`,
-            amount: `${isIncome ? '+' : '−'}${formatMoney(tx.amount)}`,
+            amount: `${isIncome ? '+' : '−'}${formatAccountMoney(tx.amount, accountById.get(tx.accountId ?? CASH_ACCOUNT_ID))}`,
             isIncome,
           };
         }),

@@ -3,7 +3,7 @@ import { IsoDate } from '../../domain/month';
 import { parseQuickEntry } from '../../domain/quick-entry';
 import { Transaction } from '../../domain/transaction';
 import { ValidationError } from '../errors';
-import { IAccountRepository, ICategoryRepository, ISettingsRepository, ITransactionRepository } from '../ports/repositories';
+import { IAccountRepository, ICategoryRepository, ICategoryRuleRepository, ISettingsRepository, ITransactionRepository } from '../ports/repositories';
 import { AddTransaction } from './add-transaction';
 
 /** Ajustes donde el formulario de movimientos recuerda la última cuenta y la última categoría de cada tipo. */
@@ -22,6 +22,7 @@ export class AddQuickExpense {
     private readonly accounts: IAccountRepository,
     private readonly settings: ISettingsRepository,
     private readonly addTransaction: AddTransaction,
+    private readonly rules?: ICategoryRuleRepository,
   ) {}
 
   async execute(text: string, date: IsoDate): Promise<Transaction> {
@@ -31,7 +32,8 @@ export class AddQuickExpense {
       .slice(-500)
       .map((tx) => ({ note: tx.note, categoryId: tx.categoryId }));
     const accounts = await this.accounts.list();
-    const entry = parseQuickEntry(text, all, history, { accounts, today: date });
+    const rules = (await this.rules?.list()) ?? [];
+    const entry = parseQuickEntry(text, all, history, { accounts, today: date, rules });
     if (!entry.amount) throw new ValidationError('quickAmount');
 
     const expense = (id: string | null | undefined) => all.find((c) => c.id === id && c.type !== 'ingreso' && !c.hidden);

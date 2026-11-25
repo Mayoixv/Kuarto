@@ -37,7 +37,8 @@ import { Appearance, appearance as savedAppearance, currentPalette, paletteVars,
 import { generatePalette, hexToRgb, PRESETS } from '../palette';
 import { CloudBackupService } from '../cloud/cloud-backup.service';
 import { askName } from '../profile-name';
-import { Lang, language, LANGUAGES, setLanguage, syncDefaultNames, t, tList } from '../i18n';
+import { errorText, Lang, language, LANGUAGES, setLanguage, syncDefaultNames, t, tList } from '../i18n';
+import { MANUAL_RATE_MAX, MANUAL_RATE_MIN } from '../../application/use-cases/exchange-rate';
 
 /** Título, descripción y opciones (para la búsqueda) de cada sección están en es.json, en ajustes.sections.<id>. */
 interface Section {
@@ -244,6 +245,50 @@ export class AjustesPage {
     } catch (error) {
       console.error(error);
       this.liveMessage.set(t('ajustes.nameFailed'));
+    }
+  }
+
+  protected readonly fxError = signal('');
+
+  /** Tasa propia (la del banco, o para usar la app sin internet): se escribe en pesos por un dólar. */
+  protected async askManualRate() {
+    this.fxError.set('');
+    const current = this.fx.rate()?.usdToDop;
+    const alert = await this.alerts.create({
+      cssClass: 'app-alert',
+      header: t('ajustes.fxManualTitle'),
+      message: t('ajustes.fxManualMsg'),
+      inputs: [
+        {
+          name: 'rate',
+          type: 'number',
+          placeholder: '60.50',
+          value: current ? String(Math.round(current * 100) / 100) : '',
+          attributes: { inputmode: 'decimal', min: MANUAL_RATE_MIN, max: MANUAL_RATE_MAX, step: '0.01' },
+        },
+      ],
+      buttons: [
+        { text: t('common.cancel'), role: 'cancel' },
+        { text: t('common.save'), role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { role, data } = await alert.onDidDismiss();
+    if (role !== 'confirm') return;
+    try {
+      await this.fx.setManual(Number(String(data?.values?.rate ?? '').replace(',', '.')));
+      this.liveMessage.set(t('ajustes.fxManualSaved'));
+    } catch (error) {
+      this.fxError.set(errorText(error, 'common.saveFailed'));
+    }
+  }
+
+  protected async clearManualRate() {
+    try {
+      await this.fx.setManual(null);
+      this.liveMessage.set(t('ajustes.fxManualCleared'));
+    } catch (error) {
+      this.fxError.set(errorText(error, 'common.saveFailed'));
     }
   }
 

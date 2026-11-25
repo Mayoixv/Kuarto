@@ -3,6 +3,7 @@ import { APP_CONTAINER } from '../app.container';
 import { ExchangeRate } from '../application/use-cases/exchange-rate';
 import { convertCents, otherCurrency } from '../domain/currency';
 import { CurrencyState } from './currency-state';
+import { MonthState } from './month-state';
 import { formatDay, formatMoneyIn, todayIso } from './format';
 
 /**
@@ -13,18 +14,30 @@ import { formatDay, formatMoneyIn, todayIso } from './format';
 export class ExchangeRateService {
   private readonly container = inject(APP_CONTAINER);
   private readonly currency = inject(CurrencyState);
+  private readonly monthState = inject(MonthState);
 
   readonly rate = signal<ExchangeRate | null>(null);
+  /** Si la tasa que se usa es la que fijó el usuario. */
+  readonly isManual = signal(false);
 
   constructor() {
-    this.container.exchangeRate
-      .cached()
-      .then((saved) => {
-        if (saved) this.rate.set(saved);
-        return this.container.exchangeRate.refresh(todayIso());
-      })
-      .then((fresh) => fresh && this.rate.set(fresh))
-      .catch(console.error);
+    this.load().catch(console.error);
+  }
+
+  private async load() {
+    this.isManual.set(!!(await this.container.exchangeRate.manual()));
+    const saved = await this.container.exchangeRate.cached();
+    if (saved) this.rate.set(saved);
+    const fresh = await this.container.exchangeRate.refresh(todayIso());
+    if (fresh) this.rate.set(fresh);
+  }
+
+  /** Fija o quita la tasa propia y recarga las pantallas que suman en la moneda principal. */
+  async setManual(usdToDop: number | null) {
+    await this.container.exchangeRate.setManual(usdToDop, todayIso());
+    if (usdToDop === null) this.rate.set(null);
+    await this.load();
+    this.monthState.notifyChange();
   }
 
   /** El monto (en la moneda que se muestra) en la otra moneda, ya con formato; null si todavía no hay tasa. */

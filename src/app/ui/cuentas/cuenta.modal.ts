@@ -5,7 +5,8 @@ import { addIcons } from 'ionicons';
 import { close } from 'ionicons/icons';
 import { APP_CONTAINER } from '../../app.container';
 import { AccountView } from '../../application/use-cases/accounts';
-import { AccountType, CASH_ACCOUNT_ID, isCard } from '../../domain/account';
+import { AccountType, CASH_ACCOUNT_ID, currencyOf, isCard } from '../../domain/account';
+import { Currency } from '../../domain/currency';
 import { CurrencyState } from '../currency-state';
 import { amountToInput, parseAmount, parseBalance, todayIso } from '../format';
 import { SuccessCheckComponent } from '../success-check.component';
@@ -47,7 +48,13 @@ export class CuentaModalComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
-  protected readonly currency = inject(CurrencyState).currency;
+  protected readonly mainCurrency = inject(CurrencyState).currency;
+  /** Moneda de la cuenta: se elige al crearla y luego queda fija (cambiarla cambiaría todos sus montos). */
+  protected readonly currency = signal<Currency>(this.mainCurrency());
+  protected readonly currencies = [
+    { value: 'DOP' as Currency, label: t('ajustes.currencyDOP') },
+    { value: 'USD' as Currency, label: t('ajustes.currencyUSD') },
+  ];
   protected readonly isEdit = signal(false);
   protected readonly isCash = signal(false);
   protected readonly isCard = computed(() => isCard({ type: this.type() }));
@@ -74,6 +81,7 @@ export class CuentaModalComponent implements OnInit {
     if (a.cutDay) this.cutDay.set(String(a.cutDay));
     if (a.dueDay) this.dueDay.set(String(a.dueDay));
     this.cardLast4.set(a.cardLast4 ?? '');
+    this.currency.set(currencyOf(a, this.mainCurrency()));
   }
 
   protected cancel() {
@@ -92,6 +100,7 @@ export class CuentaModalComponent implements OnInit {
       cutDay: this.cutDay() ? Number(this.cutDay()) : null,
       dueDay: this.dueDay() ? Number(this.dueDay()) : null,
       cardLast4: this.cardLast4(),
+      currency: this.currency(),
     };
     if (this.draft) {
       await this.modalCtrl.dismiss({ ...fields, initialBalance: balance }, 'draft');

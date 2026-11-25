@@ -95,9 +95,9 @@ describe('CSV', () => {
     const { csv, rows } = await new ExportTransactionsCsv(tx, cats).execute();
     expect(rows).toBe(2);
     expect(csv).toBe(
-      '\uFEFFfecha,tipo,categoría,monto,nota,etiquetas\r\n' +
-        '2026-10-01,ingreso,Salario,60000.00,,\r\n' +
-        '2026-10-02,gasto,Comida,1250.50,"Súper, ""grande""' + '",\r\n',
+      '\uFEFFfecha,tipo,categoría,monto,nota,etiquetas,moneda\r\n' +
+        '2026-10-01,ingreso,Salario,60000.00,,,DOP\r\n' +
+        '2026-10-02,gasto,Comida,1250.50,"Súper, ""grande""' + '",,DOP\r\n',
     );
   });
 });

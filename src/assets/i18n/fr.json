@@ -79,13 +79,21 @@
       "transaction": "Opération introuvable",
       "fixed": "Élément fixe introuvable",
       "fixedMonth": "Élément fixe du mois introuvable",
-      "budget": "Budget introuvable"
+      "budget": "Budget introuvable",
+      "rule": "Cette règle n’existe plus"
     },
     "backupKeep": "Choisissez combien de sauvegardes garder",
     "copySameMonth": "Choisissez un mois différent de la destination",
     "copyFixed": "Les paiements de Fixes ne sont pas copiés : Fixes les crée déjà chaque mois",
     "quickAmount": "Je n'ai pas trouvé le montant. Écrivez, par exemple : 500 essence",
-    "quickCategory": "Il n'y a pas de catégorie de dépense où l'enregistrer"
+    "quickCategory": "Il n'y a pas de catégorie de dépense où l'enregistrer",
+    "currencyInUse": "Ce compte a déjà un historique : sa devise ne peut pas changer. Crée un autre compte dans la nouvelle devise.",
+    "cashCurrency": "Espèces utilise toujours ta devise principale. Pour des dollars en poche, crée un autre compte espèces.",
+    "noRate": "Un compte dans une autre devise a besoin du taux du jour. Connecte-toi à internet une fois et réessaie.",
+    "toAmount": "Indique combien arrive sur l’autre compte",
+    "ruleMatch": "Saisis de 2 à 60 caractères à chercher dans la note",
+    "ruleDuplicate": "Une règle avec ce texte existe déjà",
+    "fxRate": "Indique combien de pesos vaut un dollar, entre 1 et 1000"
   },
   "common": {
     "cancel": "Annuler",
@@ -249,7 +257,7 @@
     "currency": "Devise",
     "currencyChange": "Devise : {label}. Changer",
     "currencyNote": "Cela change seulement le symbole affiché avec les montants. Les montants enregistrés ne sont pas convertis.",
-    "fxRate": "Taux de change du {date} : {rate}. À titre indicatif : les montants ne sont pas convertis.",
+    "fxRate": "Taux de change du {date} : {rate}. Il sert aux équivalences et à additionner les comptes dans une autre devise ; les montants enregistrés ne sont pas convertis.",
     "fxNone": "Avec internet, vous verrez ici le taux du jour entre le peso et le dollar.",
     "fxSource": "Rates By Exchange Rate API",
     "currencyDOP": "Peso dominicain (RD$)",
@@ -291,15 +299,17 @@
           "Couleur",
           "Palette de couleurs",
           "Langue",
-          "Devise"
+          "Devise",
+          "Utiliser mon propre taux"
         ]
       },
       "dinero": {
         "title": "Argent",
-        "sub": "Comptes, cartes, catégories",
+        "sub": "Comptes, cartes, catégories, règles",
         "options": [
           "Comptes et cartes",
-          "Gérer les catégories"
+          "Gérer les catégories",
+          "Règles automatiques"
         ]
       },
       "avisos": {
@@ -364,7 +374,17 @@
     },
     "language": "Langue",
     "languageNote": "Les dates et les nombres suivent la langue. La devise ne change pas.",
-    "languageChanged": "Langue changée"
+    "languageChanged": "Langue changée",
+    "rules": "Règles automatiques",
+    "rulesSub": "Si la note dit « uber », ça va dans Transport",
+    "fxManualSet": "Utiliser mon propre taux",
+    "fxManualChange": "Modifier mon taux",
+    "fxManualClear": "Revenir au taux du jour",
+    "fxManualRate": "Tu utilises ton propre taux : {rate}. Il sert à additionner les comptes dans une autre devise et aux équivalences.",
+    "fxManualTitle": "Ton taux de change",
+    "fxManualMsg": "Pesos pour un dollar, par exemple celui de ta banque. Il remplace le taux du jour jusqu’à ce que tu le retires.",
+    "fxManualSaved": "Ton taux est enregistré",
+    "fxManualCleared": "Le taux du jour est de nouveau utilisé"
   },
   "avisos": {
     "title": "Rappels",
@@ -482,7 +502,9 @@
     "archive": "Archiver",
     "delete": "Supprimer le compte",
     "saved": "Compte enregistré",
-    "deleteMsg": "{name} sera supprimé. Possible seulement s'il n'a ni opérations, ni virements, ni fixes."
+    "deleteMsg": "{name} sera supprimé. Possible seulement s'il n'a ni opérations, ni virements, ni fixes.",
+    "currency": "Devise",
+    "currencyHint": "Ses opérations et son solde sont dans cette devise. Les totaux l’ajoutent au taux du jour. Une fois le compte créé, la devise ne change plus."
   },
   "cuentas": {
     "failed": "Impossible de lire les comptes. Changez de section puis revenez.",
@@ -548,7 +570,11 @@
     "saved": "Virement enregistré",
     "warning": "{name} passerait à {amount}. Vérifiez « Depuis » et « Vers ».",
     "deleteMsg": "Ce virement sera supprimé et les soldes des deux comptes redeviendront comme avant.",
-    "deleted": "Virement supprimé"
+    "deleted": "Virement supprimé",
+    "arrives": "Arrive sur l’autre compte ({currency})",
+    "arrivesHint": "Vide, il utilise le taux du jour ({rate}). Indique ce que la banque t’a vraiment donné si c’était différent.",
+    "arrivesNoRate": "Indique ce qui est arrivé sur l’autre compte, dans sa devise.",
+    "arrived": "Arrivé {amount}"
   },
   "networth": {
     "title": "Patrimoine",
@@ -611,7 +637,12 @@
     "whereTitle": "Où part l'argent ?",
     "noExpenses": "Aucune dépense en {month} pour l'instant.",
     "recent": "Dernières opérations",
-    "seeAll": "Tout voir"
+    "seeAll": "Tout voir",
+    "freePerDay": {
+      "one": "Libre à dépenser aujourd’hui : {amount}, après ce qu’il reste à payer",
+      "other": "Libre à dépenser : {amount} par jour pendant {count} jours, après ce qu’il reste à payer"
+    },
+    "freeNone": "Ce qu’il reste à payer ce mois-ci utilise déjà tout ton solde"
   },
   "alerts": {
     "label": "Alertes",
@@ -635,6 +666,15 @@
     "cardsOverdue": {
       "one": "La carte {names} a un paiement en retard",
       "other": "Les cartes {names} ont un paiement en retard"
+    },
+    "shortfall": "Le {date}, tes comptes passeraient en négatif en payant {name}",
+    "shortfallNoName": "Le {date}, tes comptes passeraient en négatif avec les paiements en attente",
+    "priceUp": "{name} est passé de {from} à {to}",
+    "priceDown": "{name} est descendu de {from} à {to}",
+    "unusual": "{name} : {current} ce mois-ci ; d’habitude tu dépenses {average}",
+    "duplicates": {
+      "one": "Une opération semble en double ce mois-ci",
+      "other": "{count} opérations semblent en double ce mois-ci"
     }
   },
   "compare": {
@@ -662,7 +702,7 @@
     "emptyText": "Touchez le bouton + pour noter un revenu ou une dépense de ce mois.",
     "filters": "Rechercher et filtrer",
     "searchLabel": "Rechercher par note, catégorie ou étiquette",
-    "searchPlaceholder": "Rechercher note, catégorie ou étiquette",
+    "searchPlaceholder": "Chercher note, catégorie, étiquette ou >500",
     "kind": "Type d'opération",
     "kinds": {
       "todos": "Toutes",
@@ -1072,7 +1112,19 @@
     "accountsSub": "Tous vos comptes additionnés, cartes déduites.",
     "accountsName": "Solde des comptes",
     "pdfSaved": "PDF enregistré dans {where}.",
-    "pdfFailed": "Impossible de créer le PDF. Réessayez."
+    "pdfFailed": "Impossible de créer le PDF. Réessayez.",
+    "byMerchant": {
+      "title": "Où tu dépenses le plus",
+      "sub": "D’après la note de chaque dépense de la période (commerce, personne ou lieu)."
+    },
+    "byTag": {
+      "title": "Dépenses par étiquette",
+      "sub": "Une dépense avec plusieurs étiquettes compte dans chacune."
+    },
+    "times": {
+      "one": "1 fois",
+      "other": "{count} fois"
+    }
   },
   "pdf": {
     "savingRate": "Taux d'épargne",
@@ -1153,6 +1205,30 @@
         "Comparez vos revenus et dépenses sur 3, 6 ou 12 mois.",
         "Touchez une catégorie pour voir son évolution mois par mois.",
         "Exportez le mois en PDF pour le garder ou le partager."
+      ]
+    },
+    "calendario": {
+      "title": "Calendrier",
+      "points": [
+        "Touche un jour pour voir ce qui se paie, ce qui rentre et tes dépenses.",
+        "Regarde la couleur du point : rouge en retard, ambre en attente, vert fait.",
+        "Change de mois en haut pour prévoir les paiements à venir."
+      ]
+    },
+    "calculadoras": {
+      "title": "Calculatrices",
+      "points": [
+        "Choisis en haut quoi calculer : intérêts, inflation, liberté ou urgence.",
+        "Change un nombre : le résultat se met à jour en tapant.",
+        "Part de tes moyennes ; rien de ce que tu tapes n’est enregistré."
+      ]
+    },
+    "reglas": {
+      "title": "Règles automatiques",
+      "points": [
+        "Ajoute une règle avec un texte de la note et sa catégorie.",
+        "Tape ce texte dans une dépense et la catégorie se choisit seule.",
+        "Applique la règle à ce que tu as déjà en l’enregistrant."
       ]
     }
   },
@@ -1236,6 +1312,25 @@
     "dbFailed": "Impossible d'ouvrir la base de données locale. Fermez et rouvrez l'appli.\n\nDétail : {detail}"
   },
   "changelog": {
+    "1_0_20": [
+      "Quand tu corriges la catégorie d’une opération, Kuarto propose de créer une règle pour qu’elle soit choisie toute seule la prochaine fois.",
+      "Dans Opérations tu peux chercher par montant : >500, <1000 ou 500-1000, aussi avec du texte.",
+      "Aide dans Calendrier, Calculatrices et Règles ; les règles et ton propre taux apparaissent dans la recherche des Réglages.",
+      "Corrigé : modifier depuis l’Accueil une dépense d’un compte en dollars l’enregistrait convertie en pesos."
+    ],
+    "1_0_19": [
+      "Règles automatiques : si la note dit « uber », la dépense va toute seule dans Transport (Réglages › Règles automatiques).",
+      "Calendrier du mois avec les fixes, les rentrées, les paiements de carte, les échéances et ce que tu as dépensé chaque jour (depuis Fixes).",
+      "Nouvelles alertes sur l’Accueil : hausses de prix d’un fixe, opérations en double, dépenses inhabituelles et jours où tes comptes passeraient en négatif.",
+      "L’Accueil indique combien il te reste à dépenser par jour après ce qu’il reste à payer.",
+      "Calculatrices (Projets) : intérêts composés, inflation, indépendance financière et épargne de précaution ; et dans Rapports, santé financière, où tu dépenses le plus et dépenses par étiquette.",
+      "Tu peux utiliser ton propre taux de change (Réglages › Apparence)."
+    ],
+    "1_0_18": [
+      "Des comptes en dollars et en pesos en même temps : à la création d’un compte, tu choisis sa devise, et ses opérations et son solde l’utilisent.",
+      "Virements entre devises : indique ce qui part et ce qui arrive ; vide, le taux du jour est utilisé.",
+      "Solde, disponible, patrimoine, Je peux me le permettre ? et rapports additionnent tout dans ta devise principale au taux du jour."
+    ],
     "1_0_17": [
       "Je peux me le permettre ? regarde maintenant le mois jour par jour : il vous dit quel jour et quel paiement vous laisseraient à court, le point le plus bas du mois et à partir de quand vous pouvez l'acheter.",
       "Quand vous écrivez ou dictez un mouvement, Kuarto comprend aussi le compte (« avec la carte Popular »), la date (« hier », « il y a 3 jours ») et les étiquettes (#voyage), et tolère une faute de frappe.",
@@ -1872,5 +1967,163 @@
     "body": "Touchez « Noter la dépense » et écrivez le montant et une note : 500 essence",
     "action": "Noter la dépense",
     "saved": "Dépense de {amount} enregistrée dans {category}"
+  },
+  "reglas": {
+    "title": "Règles automatiques",
+    "note": "Quand la note d’une nouvelle opération (ou la phrase rapide, ou ce que tu notes depuis la notification) contient le texte, la catégorie est choisie toute seule et, si tu veux, le compte et une étiquette. Si plusieurs correspondent, la plus longue l’emporte.",
+    "failed": "Impossible de charger les règles.",
+    "row": "Si elle dit « {match} »",
+    "empty": "Tu n’as pas encore de règles.",
+    "add": "Ajouter une règle",
+    "new": "Nouvelle règle",
+    "edit": "Modifier la règle",
+    "match": "Si la note contient",
+    "matchPlaceholder": "Ex. : uber, netflix, épicerie",
+    "matchHint": "Les majuscules et les accents ne comptent pas.",
+    "category": "Va dans la catégorie",
+    "account": "Compte (facultatif)",
+    "noAccount": "Ne pas changer le compte",
+    "tag": "Étiquette (facultatif)",
+    "tagPlaceholder": "Ex. : travail",
+    "save": "Enregistrer la règle",
+    "saved": "Règle enregistrée",
+    "delete": "Supprimer la règle",
+    "deleteMsg": "La règle « {match} » sera supprimée. Les opérations déjà classées restent telles quelles.",
+    "applyTitle": "Aussi pour celles que tu as déjà ?",
+    "applyMsg": "Les opérations enregistrées dont la note correspond passent dans cette catégorie (et reçoivent l’étiquette). Leur compte ne change pas, pour ne pas toucher aux soldes passés. Les opérations divisées ne sont pas modifiées.",
+    "apply": "Oui, appliquer",
+    "applySkip": "Seulement les nouvelles",
+    "applied": {
+      "one": "Règle enregistrée ; 1 opération modifiée",
+      "other": "Règle enregistrée ; {count} opérations modifiées"
+    },
+    "offerTitle": "Créer une règle ?",
+    "offerMsg": "La prochaine fois que la note dira « {match} », l’opération ira toute seule dans {name}.",
+    "offerYes": "Créer la règle",
+    "offerNo": "Juste cette fois"
+  },
+  "calendar": {
+    "title": "Calendrier",
+    "open": "Voir le calendrier",
+    "failed": "Impossible de charger le calendrier.",
+    "summary": "Il reste {pay} à payer et {collect} à encaisser ce mois-ci.",
+    "eventsCount": "{count} paiements ou rentrées",
+    "spent": "dépensé {amount}",
+    "nothing": "Rien ce jour-là.",
+    "spentTitle": "Dépensé dans Opérations",
+    "earnedTitle": "Encaissé dans Opérations",
+    "legend": {
+      "overdue": "En retard",
+      "pending": "En attente",
+      "done": "Fait",
+      "moves": "Opérations seulement"
+    },
+    "kind": {
+      "pago": "Dépense fixe",
+      "cobro": "Revenu fixe",
+      "tarjeta": "Paiement de carte",
+      "cuota": "Échéance de dette"
+    },
+    "status": {
+      "hecho": "fait",
+      "pendiente": "en attente",
+      "vencido": "en retard"
+    },
+    "earned": "encaissé {amount}"
+  },
+  "health": {
+    "title": "Santé financière",
+    "noData": "Avec au moins un mois complet de revenus ou de dépenses, tes indicateurs apparaîtront ici.",
+    "basis": {
+      "one": "D’après le dernier mois complet.",
+      "other": "D’après la moyenne des {count} derniers mois complets."
+    },
+    "covered": "Épargne de précaution",
+    "coveredValue": {
+      "one": "{months} mois de dépenses",
+      "other": "{months} mois de dépenses"
+    },
+    "coveredHint": {
+      "bueno": "Ton argent disponible couvre 3 mois de dépenses ou plus ; la règle habituelle est de 3 à 6.",
+      "medio": "Tu couvres au moins un mois. Vise 3 : un objectif d’épargne avec une date te dit combien mettre chaque mois.",
+      "bajo": "Moins d’un mois : une dépense imprévue ne te laisserait aucune marge."
+    },
+    "rate": "Taux d’épargne",
+    "rateHint": {
+      "bueno": "Tu épargnes 20 % ou plus de ce qui rentre, comme le suggère la règle 50/30/20.",
+      "medio": "Entre 10 % et 20 % : c’est bien ; la règle 50/30/20 suggère 20 %. Compte ce que tu mets dans tes objectifs.",
+      "bajo": "Moins de 10 % de ce qui rentre va à l’épargne. Compte ce que tu mets dans tes objectifs (Projets)."
+    },
+    "debt": "Mensualités de dettes / revenus",
+    "debtHint": {
+      "bueno": "Jusqu’à 20 % : tes mensualités laissent de la marge.",
+      "medio": "Entre 20 % et 36 % : dans ce qu’acceptent souvent les banques, mais avec peu de marge.",
+      "bajo": "Plus de 36 % : les mensualités pèsent lourd ; dans Projets › Dettes tu peux simuler un remboursement plus rapide."
+    },
+    "note": "Ce sont des repères généraux, pas un conseil personnel."
+  },
+  "calc": {
+    "open": "Calculatrices",
+    "title": "Calculatrices",
+    "subtitle": "Elles calculent avec ce que tu saisis ; rien n’est enregistré.",
+    "years": "Années",
+    "tools": {
+      "interes": "Intérêts",
+      "inflacion": "Inflation",
+      "libertad": "Liberté",
+      "emergencia": "Urgence"
+    },
+    "interes": {
+      "title": "Intérêts composés",
+      "sub": "Combien tu auras en épargnant chaque mois à un taux annuel, comme un livret ou un dépôt à terme.",
+      "initial": "Montant de départ ({currency})",
+      "monthly": "Versement mensuel ({currency})",
+      "rate": "Taux annuel (%)",
+      "total": "Tu aurais",
+      "contributed": "Ce que tu as versé",
+      "interest": "Gagné en intérêts"
+    },
+    "inflacion": {
+      "title": "Inflation",
+      "sub": "Ce que coûtera plus tard ce qui coûte un montant aujourd’hui, et ce que vaudra cet argent s’il ne bouge pas.",
+      "amount": "Montant d’aujourd’hui ({currency})",
+      "rate": "Inflation annuelle (%)",
+      "future": "Ça coûtera",
+      "power": "Cet argent gardé achètera ce qui coûte aujourd’hui"
+    },
+    "libertad": {
+      "title": "Indépendance financière",
+      "sub": "Combien il te faut pour vivre de ton épargne et quand tu y arriverais. Avec la règle des 4 %, c’est 25 fois une année de dépenses.",
+      "expenses": "Une année de dépenses ({currency})",
+      "withdrawal": "Retrait annuel (%)",
+      "saved": "Ce que tu as déjà ({currency})",
+      "monthly": "Épargne mensuelle ({currency})",
+      "return": "Rendement annuel après inflation (%)",
+      "target": "Il te faut",
+      "when": "Tu y arriverais dans",
+      "years": {
+        "one": "{years} an",
+        "other": "{years} ans"
+      },
+      "never": "À ce rythme, pas avant 100 ans",
+      "already": "Tu y es déjà",
+      "note": "La règle des 4 % vient d’études sur des portefeuilles d’actions et d’obligations aux États-Unis ; c’est un repère, pas une garantie."
+    },
+    "emergencia": {
+      "title": "Épargne de précaution",
+      "sub": "Ce qu’il vaut mieux avoir de côté pour un imprévu, et le temps pour le réunir.",
+      "monthly": "Un mois de dépenses ({currency})",
+      "months": "Mois à couvrir",
+      "saved": "Ce que tu as déjà ({currency})",
+      "saving": "Ce que tu peux mettre de côté par mois ({currency})",
+      "target": "Ton épargne devrait être de",
+      "when": "Tu l’aurais dans",
+      "monthsValue": {
+        "one": "{count} mois",
+        "other": "{count} mois"
+      },
+      "never": "Indique combien tu peux mettre de côté par mois",
+      "already": "Tu l’as déjà"
+    }
   }
 }

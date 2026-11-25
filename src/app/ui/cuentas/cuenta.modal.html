@@ -13,6 +13,15 @@
       </div>
     }
 
+    @if (!isCash() && !isEdit() && !draft) {
+      <div class="field">
+        <app-select-field [label]="t('cuenta.currency')" [options]="currencies" [value]="currency()" (valueChange)="currency.set($event!)"></app-select-field>
+      </div>
+      @if (currency() !== mainCurrency()) {
+        <p class="hint">{{ t('cuenta.currencyHint') }}</p>
+      }
+    }
+
     <div class="field">
       <ion-input
         [label]="t('common.name')"

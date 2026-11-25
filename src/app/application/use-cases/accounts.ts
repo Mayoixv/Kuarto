@@ -1,4 +1,5 @@
-import { Account, AccountType, ADJUST_ACCOUNT_ID, CASH_ACCOUNT_ID, dueDateAfter, isCard, lastCutDate, Transfer } from '../../domain/account';
+import { Account, AccountType, ADJUST_ACCOUNT_ID, arrivingAmount, CASH_ACCOUNT_ID, currencyOf, dueDateAfter, isCard, lastCutDate, Transfer } from '../../domain/account';
+import { Currency, isCurrency } from '../../domain/currency';
 import { isValidCents } from '../../domain/money';
 import { daysBetween, IsoDate, isValidIsoDate } from '../../domain/month';
 import { DebtDirection } from '../../domain/debts';
@@ -6,6 +7,10 @@ import { NotFoundError, ValidationError } from '../errors';
 import { GetDebtsOverview } from './debts';
 import { IAccountRepository, IdGenerator, ISavingsRepository, ISettingsRepository } from '../ports/repositories';
 import { signedAmount } from '../../domain/savings';
+import { LoadMoneyConverter, MoneyConverter } from './money-converter';
+
+type ConverterSource = Pick<LoadMoneyConverter, 'execute'>;
+const identity: ConverterSource = { execute: async () => MoneyConverter.identity() };
 
 const TYPES: AccountType[] = ['efectivo', 'banco', 'ahorro', 'tarjeta', 'inversion'];
 
@@ -18,6 +23,8 @@ export interface AccountFields {
   dueDay?: number | null;
   /** Últimos 4 dígitos de la tarjeta, para reconocerla (se muestran en la tarjeta de crédito). */
   cardLast4?: string | null;
+  /** Moneda de la cuenta; sin valor, la principal. Solo se puede cambiar mientras la cuenta no tenga historial. */
+  currency?: Currency | null;
 }
 
 const validDay = (d: number | null | undefined) => typeof d === 'number' && Number.isInteger(d) && d >= 1 && d <= 31;
@@ -26,6 +33,7 @@ export class SaveAccount {
   constructor(
     private readonly accounts: IAccountRepository,
     private readonly ids: IdGenerator,
+    private readonly converter: ConverterSource = identity,
   ) {}
 
   /** Crea una cuenta, o la edita si llega `id`. Los datos de tarjeta solo se guardan en tarjetas. */
@@ -42,6 +50,17 @@ export class SaveAccount {
     if (last4 && (await this.accounts.list()).some((a) => a.id !== id && a.cardLast4 === last4)) {
       throw new ValidationError('cardLast4Taken');
     }
+    const { main, usdToDop } = await this.converter.execute();
+    // La moneda principal se guarda como "sin moneda": así la cuenta la sigue si se cambia en Ajustes.
+    const foreign = (c: Currency | null | undefined) => (c && c !== main ? c : null);
+    const currency = foreign(input.currency);
+    if (currency && !isCurrency(currency)) throw new ValidationError('currency');
+    if (currency && id === CASH_ACCOUNT_ID) throw new ValidationError('cashCurrency');
+    // Cambiarla con historial pasaría a otra moneda todos los montos ya registrados.
+    const changed = currency !== foreign(current?.currency);
+    if (id && changed && (await this.accounts.isInUse(id))) throw new ValidationError('currencyInUse');
+    // Sin tasa guardada no se podría sumar a los totales (editar una que ya existe sí se puede).
+    if (currency && changed && !usdToDop) throw new ValidationError('noRate');
     const card = isCard(input);
     if (card) {
       if (!isValidCents(input.creditLimit ?? 0)) throw new ValidationError('cardLimit');
@@ -58,6 +77,7 @@ export class SaveAccount {
       dueDay: card ? input.dueDay : null,
       archived: current?.archived ?? false,
       cardLast4: input.type === 'efectivo' ? null : last4,
+      currency,
     };
     await this.accounts.save(account);
     return account;
@@ -130,24 +150,29 @@ export interface AccountView {
 }
 
 export interface AccountsOverview {
+  /** Cada saldo en la moneda de su cuenta. */
   accounts: AccountView[];
-  /** Lo que tienes: suma de las cuentas que no son tarjetas. */
+  /** Lo que tienes: suma de las cuentas que no son tarjetas, en la moneda principal. */
   assets: number;
-  /** Lo que debes en tarjetas (positivo). */
+  /** Lo que debes en tarjetas (positivo), en la moneda principal. */
   cardDebt: number;
 }
 
 export class GetAccountsOverview {
-  constructor(private readonly accounts: IAccountRepository) {}
+  constructor(
+    private readonly accounts: IAccountRepository,
+    private readonly converter: ConverterSource = identity,
+  ) {}
 
   async execute(): Promise<AccountsOverview> {
-    const [accounts, balances] = await Promise.all([this.accounts.list(), this.accounts.balances()]);
+    const [accounts, balances, c] = await Promise.all([this.accounts.list(), this.accounts.balances(), this.converter.execute()]);
     const views = accounts.map((account) => ({ account, balance: balances.get(account.id) ?? account.initialBalance }));
     const active = views.filter((v) => !v.account.archived || v.balance !== 0);
+    const inMain = (v: AccountView) => c.toMain(v.balance, v.account.currency);
     return {
       accounts: views,
-      assets: active.filter((v) => !isCard(v.account)).reduce((s, v) => s + v.balance, 0),
-      cardDebt: active.filter((v) => isCard(v.account)).reduce((s, v) => s + Math.max(0, -v.balance), 0),
+      assets: active.filter((v) => !isCard(v.account)).reduce((s, v) => s + inMain(v), 0),
+      cardDebt: active.filter((v) => isCard(v.account)).reduce((s, v) => s + Math.max(0, -inMain(v)), 0),
     };
   }
 }
@@ -158,12 +183,15 @@ export interface TransferFields {
   fromAccountId: string;
   toAccountId: string;
   note?: string;
+  /** Entre cuentas de distinta moneda: lo que llega a la cuenta destino, en su moneda. */
+  toAmount?: number | null;
 }
 
 export class SaveTransfer {
   constructor(
     private readonly accounts: IAccountRepository,
     private readonly ids: IdGenerator,
+    private readonly converter: ConverterSource = identity,
   ) {}
 
   /** Crea una transferencia, o la edita si llega `id`. */
@@ -172,9 +200,11 @@ export class SaveTransfer {
     if (!isValidCents(input.amount)) throw new ValidationError('amountPositive');
     if (!isValidIsoDate(input.date)) throw new ValidationError('date');
     if (input.fromAccountId === input.toAccountId) throw new ValidationError('sameAccounts');
-    for (const accountId of [input.fromAccountId, input.toAccountId]) {
-      if (!(await this.accounts.get(accountId))) throw new NotFoundError('account');
-    }
+    const [from, to] = await Promise.all([this.accounts.get(input.fromAccountId), this.accounts.get(input.toAccountId)]);
+    if (!from || !to) throw new NotFoundError('account');
+    const { main } = await this.converter.execute();
+    const crossCurrency = currencyOf(from, main) !== currencyOf(to, main);
+    if (crossCurrency && !isValidCents(input.toAmount ?? 0)) throw new ValidationError('toAmount');
     const transfer: Transfer = {
       id: id ?? this.ids.next(),
       date: input.date,
@@ -182,6 +212,7 @@ export class SaveTransfer {
       fromAccountId: input.fromAccountId,
       toAccountId: input.toAccountId,
       note: input.note?.trim() ?? '',
+      toAmount: crossCurrency ? input.toAmount : null,
     };
     await this.accounts.saveTransfer(transfer);
     return transfer;
@@ -263,7 +294,7 @@ export class GetCardStatuses {
       const currentDebt = Math.max(0, -(now.get(account.id) ?? account.initialBalance));
       const paidSinceCut = transfers
         .filter((t) => t.toAccountId === account.id && t.date > lastCut && t.date <= today)
-        .reduce((s, t) => s + t.amount, 0);
+        .reduce((s, t) => s + arrivingAmount(t), 0);
       out.push({
         account,
         lastCut,
@@ -284,8 +315,10 @@ export class GetCardStatuses {
 
 export interface CardToPay {
   account: Account;
-  /** Lo que falta pagar del último estado; sin corte configurado, toda la deuda. */
+  /** Lo que falta pagar del último estado; sin corte configurado, toda la deuda. En la moneda de la tarjeta. */
   amount: number;
+  /** `amount` en la moneda principal. */
+  inMain: number;
   /** null si la tarjeta no tiene días de corte y pago. */
   dueDate: IsoDate | null;
   daysToDue: number | null;
@@ -304,21 +337,23 @@ export class GetCardsToPay {
   constructor(
     private readonly accounts: GetAccountsOverview,
     private readonly statuses: GetCardStatuses,
+    private readonly converter: ConverterSource = identity,
   ) {}
 
+  /** `total` va en la moneda principal; cada tarjeta, en la suya. */
   async execute(today: IsoDate): Promise<CardsToPay> {
-    const [overview, statuses] = await Promise.all([this.accounts.execute(), this.statuses.execute(today)]);
+    const [overview, statuses, c] = await Promise.all([this.accounts.execute(), this.statuses.execute(today), this.converter.execute()]);
     const byId = new Map(statuses.map((s) => [s.account.id, s]));
     const cards = overview.accounts
       .filter((v) => isCard(v.account) && !v.account.archived)
       .map((v): CardToPay => {
         const s = byId.get(v.account.id);
-        return s
-          ? { account: v.account, amount: s.pending, dueDate: s.dueDate, daysToDue: s.daysToDue }
-          : { account: v.account, amount: Math.max(0, -v.balance), dueDate: null, daysToDue: null };
+        const amount = s ? s.pending : Math.max(0, -v.balance);
+        const inMain = c.toMain(amount, v.account.currency);
+        return { account: v.account, amount, inMain, dueDate: s?.dueDate ?? null, daysToDue: s?.daysToDue ?? null };
       })
-      .filter((c) => c.amount > 0);
-    return { total: cards.reduce((s, c) => s + c.amount, 0), cards };
+      .filter((card) => card.amount > 0);
+    return { total: cards.reduce((s, card) => s + card.inMain, 0), cards };
   }
 }
 

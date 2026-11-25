@@ -1,0 +1,90 @@
+<ion-content class="surface-light" [fullscreen]="true">
+  <header class="screen-head">
+    <button type="button" class="back" [attr.aria-label]="t('common.goBack')" (click)="back()">
+      <ion-icon name="chevron-back" aria-hidden="true"></ion-icon>
+      {{ t('common.goBack') }}
+    </button>
+    <div class="title-row">
+      <h1 class="screen-title">{{ t('calendar.title') }}</h1>
+      <app-help-button topic="calendario"></app-help-button>
+    </div>
+    <app-month-switcher></app-month-switcher>
+  </header>
+
+  <app-loading [show]="!days() && !failed()"></app-loading>
+  @if (failed()) {
+    <p class="note">{{ t('calendar.failed') }}</p>
+  } @else if (days(); as list) {
+    <p class="note">
+      {{ t('calendar.summary', { pay: money(totals().toPay), collect: money(totals().toCollect) }) }}
+    </p>
+
+    <section class="card" [attr.aria-label]="t('calendar.title')">
+      <div class="grid weekdays" aria-hidden="true">
+        @for (w of weekdays; track $index) {
+          <span>{{ w }}</span>
+        }
+      </div>
+      <div class="grid">
+        @for (x of lead(); track $index) {
+          <span aria-hidden="true"></span>
+        }
+        @for (d of list; track d.date) {
+          <button
+            type="button"
+            class="day"
+            [class.is-today]="d.date === today"
+            [attr.aria-pressed]="d.date === selected()"
+            [attr.aria-label]="dayAria(d)"
+            (click)="selected.set(d.date)"
+          >
+            <span class="num">{{ +d.date.slice(8) }}</span>
+            @if (tone(d); as tn) {
+              <span [class]="'dot ' + tn" aria-hidden="true"></span>
+            } @else if (d.spent || d.earned) {
+              <span class="dot spent" aria-hidden="true"></span>
+            }
+          </button>
+        }
+      </div>
+      <ul class="legend" aria-hidden="true">
+        <li><span class="dot vencido"></span>{{ t('calendar.legend.overdue') }}</li>
+        <li><span class="dot pendiente"></span>{{ t('calendar.legend.pending') }}</li>
+        <li><span class="dot hecho"></span>{{ t('calendar.legend.done') }}</li>
+        <li><span class="dot spent"></span>{{ t('calendar.legend.moves') }}</li>
+      </ul>
+    </section>
+
+    @if (selectedDay(); as d) {
+      <section class="card" aria-live="polite">
+        <h2 class="card-title">{{ dayLabel(d.date) }}</h2>
+        @if (d.events.length === 0 && !d.spent && !d.earned) {
+          <p class="card-sub">{{ t('calendar.nothing') }}</p>
+        }
+        <ul class="events">
+          @for (e of d.events; track $index) {
+            <li>
+              <span class="event-text">
+                <span class="event-title">{{ e.label }}</span>
+                <span [class]="'event-sub ' + e.status">{{ t('calendar.kind.' + e.kind) }} · {{ t('calendar.status.' + e.status) }}</span>
+              </span>
+              <span class="event-amount" [class.income]="e.kind === 'cobro'">{{ e.kind === 'cobro' ? '+' : '' }}{{ amount(e) }}</span>
+            </li>
+          }
+          @if (d.spent) {
+            <li>
+              <span class="event-text"><span class="event-title">{{ t('calendar.spentTitle') }}</span></span>
+              <span class="event-amount">−{{ money(d.spent) }}</span>
+            </li>
+          }
+          @if (d.earned) {
+            <li>
+              <span class="event-text"><span class="event-title">{{ t('calendar.earnedTitle') }}</span></span>
+              <span class="event-amount income">+{{ money(d.earned) }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+</ion-content>

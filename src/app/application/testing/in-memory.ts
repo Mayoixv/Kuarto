@@ -2,14 +2,16 @@ import { Budget } from '../../domain/budget';
 import { Category } from '../../domain/category';
 import { monthOf, MonthKey } from '../../domain/month';
 import { RecurringExpense, RecurringExpenseInstance } from '../../domain/recurring-expense';
-import { Account, ADJUST_ACCOUNT_ID, CASH_ACCOUNT_ID, Transfer } from '../../domain/account';
+import { Account, ADJUST_ACCOUNT_ID, arrivingAmount, CASH_ACCOUNT_ID, Transfer } from '../../domain/account';
 import { Debt, DebtPayment } from '../../domain/debts';
 import { SavingsContribution, SavingsGoal, signedAmount } from '../../domain/savings';
 import { Attachment, Transaction } from '../../domain/transaction';
+import { CategoryRule } from '../../domain/rules';
 import {
   IBudgetRepository,
   IAccountRepository,
   ICategoryRepository,
+  ICategoryRuleRepository,
   IDebtRepository,
   IdGenerator,
   IRecurringExpenseRepository,
@@ -165,7 +167,7 @@ export class InMemoryAccounts implements IAccountRepository {
     for (const t of this.transfers.values()) {
       if (t.date > upTo) continue;
       out.set(t.fromAccountId, (out.get(t.fromAccountId) ?? 0) - t.amount);
-      out.set(t.toAccountId, (out.get(t.toAccountId) ?? 0) + t.amount);
+      out.set(t.toAccountId, (out.get(t.toAccountId) ?? 0) + arrivingAmount(t));
     }
     for (const c of this.savings?.contributions.values() ?? []) {
       if (c.date > upTo || !c.accountId) continue;
@@ -185,4 +187,11 @@ export class InMemoryAccounts implements IAccountRepository {
 export class SequentialIds implements IdGenerator {
   private n = 0;
   next() { return `id-${++this.n}`; }
+}
+
+export class InMemoryCategoryRules implements ICategoryRuleRepository {
+  items = new Map<string, CategoryRule>();
+  async list() { return [...this.items.values()]; }
+  async save(r: CategoryRule) { this.items.set(r.id, r); }
+  async delete(id: string) { this.items.delete(id); }
 }

@@ -69,6 +69,7 @@ import {
   IBackupStore,
   IBudgetRepository,
   ICategoryRepository,
+  ICategoryRuleRepository,
   IDebtRepository,
   IdGenerator,
   IRecurringExpenseRepository,
@@ -79,6 +80,7 @@ import {
 import {
   SqliteBudgetRepository,
   SqliteAccountRepository,
+  SqliteCategoryRuleRepository,
   SqliteCategoryRepository,
   SqliteDebtRepository,
   SqliteRecurringExpenseRepository,
@@ -91,6 +93,11 @@ import { OpenErApiRates } from './infrastructure/open-er-api-rates';
 import { GetExchangeRate, IExchangeRateSource } from './application/use-cases/exchange-rate';
 import { CheckBigExpense, PersonalitySettings } from './application/use-cases/personality';
 import { AddQuickExpense } from './application/use-cases/quick-expense';
+import { LoadMoneyConverter, MainCurrencyTransactions } from './application/use-cases/money-converter';
+import { GetInsights } from './application/use-cases/get-insights';
+import { GetMonthCalendar } from './application/use-cases/get-month-calendar';
+import { GetFinancialHealth } from './application/use-cases/get-financial-health';
+import { ApplyRuleToPast, DeleteCategoryRule, SaveCategoryRule } from './application/use-cases/category-rules';
 import { SqliteBackupStore } from './infrastructure/sqlite/sqlite-backup-store';
 import { CapacitorSqliteDatabase } from './infrastructure/sqlite/capacitor-sqlite-database';
 import { runMigrations } from './infrastructure/sqlite/migrations';
@@ -105,6 +112,7 @@ export interface Repositories {
   backup: IBackupStore;
   debts: IDebtRepository;
   accounts: IAccountRepository;
+  rules: ICategoryRuleRepository;
   /** Contraseñas que no deben quedar en la base (la del respaldo automático). */
   secrets: ISettingsRepository;
 }
@@ -148,6 +156,8 @@ export interface AppContainer {
   wipeAllData: WipeAllData;
   autoBackup: AutoBackup;
   exchangeRate: GetExchangeRate;
+  /** Pasa montos de cuentas en otra moneda a la principal. */
+  loadConverter: LoadMoneyConverter;
   personality: PersonalitySettings;
   checkBigExpense: CheckBigExpense;
   addQuickExpense: AddQuickExpense;
@@ -181,6 +191,13 @@ export interface AppContainer {
   completeOnboarding: CompleteOnboarding;
   profile: UserProfile;
   getAlerts: GetAlerts;
+  getInsights: GetInsights;
+  getMonthCalendar: GetMonthCalendar;
+  getFinancialHealth: GetFinancialHealth;
+  rules: ICategoryRuleRepository;
+  saveCategoryRule: SaveCategoryRule;
+  deleteCategoryRule: DeleteCategoryRule;
+  applyRuleToPast: ApplyRuleToPast;
   getNotificationPlan: GetNotificationPlan;
   getMonthHistory: GetMonthHistory;
   getMonthRecap: GetMonthRecap;
@@ -200,12 +217,17 @@ export function buildContainer(
 ): AppContainer {
   const getMonthRecurringExpenses = new GetMonthRecurringExpenses(repos.recurring);
   const createBackup = new CreateBackup(repos.backup);
-  const getMonthOverview = new GetMonthOverview(repos.transactions, repos.categories, repos.savings);
+
   const addTransaction = new AddTransaction(repos.transactions, repos.categories, ids, repos.accounts);
   const addRecurringExpenses = new AddRecurringExpenses(repos.recurring, repos.categories, ids);
   const addSavingsGoal = new AddSavingsGoal(repos.savings, ids);
   const currencySettings = new CurrencySettings(repos.settings);
-  const saveAccount = new SaveAccount(repos.accounts, ids);
+  const exchangeRate = new GetExchangeRate(repos.settings, rates);
+  const loadConverter = new LoadMoneyConverter(currencySettings, repos.accounts, exchangeRate);
+  // Los resúmenes suman en la moneda principal; las listas y formularios usan repos.transactions tal cual.
+  const inMain = new MainCurrencyTransactions(repos.transactions, loadConverter);
+  const getMonthOverview = new GetMonthOverview(inMain, repos.categories, repos.savings, repos.transactions);
+  const saveAccount = new SaveAccount(repos.accounts, ids, loadConverter);
   const adjustAccountBalance = new AdjustAccountBalance(repos.accounts, ids);
   const saveDebt = new SaveDebt(repos.debts, ids);
   const profile = new UserProfile(repos.settings);
@@ -213,11 +235,14 @@ export function buildContainer(
   const getCardStatuses = new GetCardStatuses(repos.accounts, repos.settings);
   const getDebtsOverview = new GetDebtsOverview(repos.debts, repos.recurring);
   const addDebtAsFixed = new AddDebtAsFixed(getDebtsOverview, repos.recurring, repos.categories, ids);
-  const getAccountsOverview = new GetAccountsOverview(repos.accounts);
-  const getBudgetStatuses = new GetBudgetStatuses(repos.budgets, repos.transactions);
+  const getAccountsOverview = new GetAccountsOverview(repos.accounts, loadConverter);
+  const getBudgetStatuses = new GetBudgetStatuses(repos.budgets, inMain);
   const getUpcomingRecurring = new GetUpcomingRecurring(getMonthRecurringExpenses);
-  const getCardsToPay = new GetCardsToPay(getAccountsOverview, getCardStatuses);
-  const getMonthHistory = new GetMonthHistory(repos.transactions, repos.categories, repos.savings);
+  const getCardsToPay = new GetCardsToPay(getAccountsOverview, getCardStatuses, loadConverter);
+  const getMonthHistory = new GetMonthHistory(inMain, repos.categories, repos.savings);
+  const canAfford = new CanAfford(getMonthHistory, getAccountsOverview, getMonthRecurringExpenses, repos.categories, getCardsToPay, inMain);
+  const getDebtInstallments = new GetDebtInstallments(getDebtsOverview);
+  const getInsights = new GetInsights(repos.recurring, inMain, repos.categories, canAfford);
   return {
     categories: repos.categories,
     transactions: repos.transactions,
@@ -240,11 +265,13 @@ export function buildContainer(
     updateRecurringExpense: new UpdateRecurringExpense(repos.recurring, repos.categories),
     removeRecurringExpense: new RemoveRecurringExpense(repos.recurring),
     getMonthOverview,
-    getDebtInstallments: new GetDebtInstallments(getDebtsOverview),
+    getDebtInstallments,
+    getFinancialHealth: new GetFinancialHealth(getMonthHistory, getAccountsOverview, getDebtsOverview),
+    getMonthCalendar: new GetMonthCalendar(getMonthRecurringExpenses, getCardStatuses, getDebtInstallments, inMain, repos.categories),
     getSubscriptionCost: new GetSubscriptionCost(repos.recurring, repos.categories),
-    getReport: new GetReport(repos.transactions, repos.categories, repos.savings, repos.accounts, getMonthRecurringExpenses),
+    getReport: new GetReport(inMain, repos.categories, repos.savings, repos.accounts, getMonthRecurringExpenses, loadConverter),
     getMonthHistory,
-    getMonthRecap: new GetMonthRecap(repos.transactions, repos.categories, getMonthHistory),
+    getMonthRecap: new GetMonthRecap(inMain, repos.categories, getMonthHistory),
     getMonthRecurringExpenses,
     payRecurringExpense: new PayRecurringExpense(repos.recurring, repos.transactions, ids, repos.debts),
     getSavingsOverview: new GetSavingsOverview(repos.savings),
@@ -268,31 +295,37 @@ export function buildContainer(
     restoreBackup: new RestoreBackup(repos.backup),
     wipeAllData: new WipeAllData(repos.backup),
     autoBackup: new AutoBackup(repos.settings, createBackup, repos.secrets),
-    exchangeRate: new GetExchangeRate(repos.settings, rates),
+    exchangeRate,
+    loadConverter,
     personality: new PersonalitySettings(repos.settings),
     checkBigExpense: new CheckBigExpense(repos.categories, getMonthOverview),
-    addQuickExpense: new AddQuickExpense(repos.categories, repos.transactions, repos.accounts, repos.settings, addTransaction),
+    addQuickExpense: new AddQuickExpense(repos.categories, repos.transactions, repos.accounts, repos.settings, addTransaction, repos.rules),
     accounts: repos.accounts,
     saveAccount,
     archiveAccount: new ArchiveAccount(repos.accounts),
     deleteAccount: new DeleteAccount(repos.accounts),
     adjustAccountBalance,
     getAccountsOverview,
-    canAfford: new CanAfford(getMonthHistory, getAccountsOverview, getMonthRecurringExpenses, repos.categories, getCardsToPay, repos.transactions),
+    canAfford,
     setCardMinimum: new SetCardMinimum(repos.settings),
     getNetWorth: new GetNetWorth(getAccountsOverview, getDebtsOverview, repos.savings),
     getCardsToPay,
     getCardStatuses,
-    saveTransfer: new SaveTransfer(repos.accounts, ids),
+    saveTransfer: new SaveTransfer(repos.accounts, ids, loadConverter),
     deleteTransfer: new DeleteTransfer(repos.accounts),
-    exportCsv: new ExportTransactionsCsv(repos.transactions, repos.categories),
+    exportCsv: new ExportTransactionsCsv(repos.transactions, repos.categories, repos.accounts, () => currencySettings.get()),
     pinLock: new PinLock(repos.settings),
     bulkUpdateTransactions: new BulkUpdateTransactions(repos.transactions, repos.categories),
     settings: repos.settings,
     pauseRecurringExpense: new PauseRecurringExpense(repos.recurring),
     resumeRecurringExpense: new ResumeRecurringExpense(repos.recurring),
     getUpcomingRecurring,
-    getAlerts: new GetAlerts(getUpcomingRecurring, getBudgetStatuses, repos.categories, getCardStatuses),
+    getAlerts: new GetAlerts(getUpcomingRecurring, getBudgetStatuses, repos.categories, getCardStatuses, getInsights),
+    getInsights,
+    rules: repos.rules,
+    saveCategoryRule: new SaveCategoryRule(repos.rules, repos.categories, repos.accounts, ids),
+    deleteCategoryRule: new DeleteCategoryRule(repos.rules),
+    applyRuleToPast: new ApplyRuleToPast(repos.rules, repos.transactions, repos.categories),
     getNotificationPlan: new GetNotificationPlan(getMonthRecurringExpenses, getBudgetStatuses, repos.categories, getCardStatuses),
     saveDebt,
     deleteDebt: new DeleteDebt(repos.debts),
@@ -339,6 +372,7 @@ export async function createSqliteContainer(
     backup,
     debts: new SqliteDebtRepository(db),
     accounts: new SqliteAccountRepository(db),
+    rules: new SqliteCategoryRuleRepository(db),
     secrets: new SecureSecrets(),
   });
   await container.autoBackup.migrateLegacyPassword();

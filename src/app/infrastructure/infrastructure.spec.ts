@@ -8,6 +8,7 @@ import {
   SqliteBudgetRepository,
   SqliteAccountRepository,
   SqliteCategoryRepository,
+  SqliteCategoryRuleRepository,
   SqliteDebtRepository,
   SqliteRecurringExpenseRepository,
   SqliteSavingsRepository,
@@ -387,5 +388,23 @@ describe('presupuestos con varias categorías (migración 11)', () => {
     // Si se borra una categoría extra, el presupuesto sigue con las demás.
     await db.run("DELETE FROM categories WHERE id = 'cat-supermercado'");
     expect((await repo.listByMonth('2026-10'))[0].extraCategoryIds).toEqual([]);
+  });
+});
+
+describe('reglas automáticas en SQLite (migración 19)', () => {
+  it('guarda y edita reglas, y al borrar la categoría moviéndola las reglas la siguen', async () => {
+    const db = await freshDb();
+    const cats = new SqliteCategoryRepository(db);
+    const rules = new SqliteCategoryRuleRepository(db);
+    await cats.save({ id: 'u1', name: 'Taxis', type: 'variable' });
+    await rules.save({ id: 'r1', match: 'uber', categoryId: 'u1', accountId: null, tag: 'viaje' });
+    await rules.save({ id: 'r1', match: 'Uber', categoryId: 'u1', accountId: 'acc-efectivo', tag: null });
+    expect(await rules.list()).toEqual([{ id: 'r1', match: 'Uber', categoryId: 'u1', accountId: 'acc-efectivo', tag: null }]);
+    await cats.deleteMovingTo('u1', 'cat-comida');
+    expect((await rules.list())[0].categoryId).toBe('cat-comida');
+    // La base rechaza un texto de menos de 2 letras aunque la app ya lo valide.
+    await expect(rules.save({ id: 'r2', match: ' a ', categoryId: 'cat-comida' })).rejects.toThrow();
+    await rules.delete('r1');
+    expect(await rules.list()).toEqual([]);
   });
 });

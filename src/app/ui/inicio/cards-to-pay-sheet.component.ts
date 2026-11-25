@@ -3,7 +3,7 @@ import { IonIcon, ModalController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { cardOutline, close } from 'ionicons/icons';
 import { CardsToPay } from '../../application/use-cases/accounts';
-import { dueLabel, formatMoney, todayIso } from '../format';
+import { dueLabel, formatAccountMoney, formatMoney, todayIso } from '../format';
 import { t } from '../i18n';
 
 /** Detalle de "Por pagar de tarjetas": cuánto de cada tarjeta, hasta qué fecha y cuántos días faltan. */
@@ -32,7 +32,7 @@ import { t } from '../i18n';
                 <span class="when">{{ t('cardsToPay.noCut') }}</span>
               }
             </div>
-            <span class="amount">{{ money(c.amount) }}</span>
+            <span class="amount">{{ accountMoney(c.amount, c.account) }}</span>
           </li>
         }
       </ul>
@@ -144,6 +144,7 @@ export class CardsToPaySheetComponent {
   private readonly modalCtrl = inject(ModalController);
   protected readonly t = t;
   protected readonly money = formatMoney;
+  protected readonly accountMoney = formatAccountMoney;
   private readonly today = todayIso();
 
   @Input({ required: true }) data!: CardsToPay;

@@ -1,0 +1,65 @@
+<ion-content class="surface-light">
+  <div class="sheet" [class.is-saved]="saved()">
+    <header class="sheet-head">
+      <h1 class="screen-title">{{ rule ? t('reglas.edit') : t('reglas.new') }}</h1>
+      <button type="button" class="close" [attr.aria-label]="t('common.cancel')" (click)="cancel()">
+        <ion-icon name="close" aria-hidden="true"></ion-icon>
+      </button>
+    </header>
+
+    <div class="field">
+      <ion-input
+        [label]="t('reglas.match')"
+        label-placement="floating"
+        [placeholder]="t('reglas.matchPlaceholder')"
+        [maxlength]="maxLength"
+        [value]="match()"
+        (ionInput)="match.set(($event.detail.value ?? '').toString())"
+      ></ion-input>
+    </div>
+    <p class="hint">{{ t('reglas.matchHint') }}</p>
+
+    <div class="field">
+      <app-category-field
+        [categories]="categories()"
+        newType="variable"
+        [label]="t('reglas.category')"
+        [(value)]="categoryId"
+        (created)="addCategory($event)"
+      ></app-category-field>
+    </div>
+
+    <div class="field">
+      <app-select-field [label]="t('reglas.account')" [options]="accountOptions()" [value]="accountId()" (valueChange)="accountId.set($event ?? '')"></app-select-field>
+    </div>
+
+    <div class="field">
+      <ion-input
+        [label]="t('reglas.tag')"
+        label-placement="floating"
+        [placeholder]="t('reglas.tagPlaceholder')"
+        [value]="tag()"
+        (ionInput)="tag.set(($event.detail.value ?? '').toString())"
+      ></ion-input>
+    </div>
+
+    @if (error(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+
+    <button type="button" class="btn-primary save" [disabled]="!canSave()" (click)="save()">
+      {{ rule ? t('common.saveChanges') : t('reglas.save') }}
+    </button>
+
+    @if (rule) {
+      <button type="button" class="delete" [disabled]="saving()" (click)="confirmDelete()">{{ t('reglas.delete') }}</button>
+    }
+  </div>
+
+  <div class="done" [class.visible]="saved()" aria-live="polite">
+    @if (saved()) {
+      <app-success-check state="in"></app-success-check>
+      <p class="done-text">{{ doneText() }}</p>
+    }
+  </div>
+</ion-content>

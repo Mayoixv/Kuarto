@@ -79,13 +79,21 @@
       "transaction": "Transaction not found",
       "fixed": "Recurring item not found",
       "fixedMonth": "This month's recurring item not found",
-      "budget": "Budget not found"
+      "budget": "Budget not found",
+      "rule": "That rule no longer exists"
     },
     "backupKeep": "Choose how many backups to keep",
     "copySameMonth": "Choose a month other than the destination",
     "copyFixed": "Recurring payments aren't copied: Recurring already creates them every month",
     "quickAmount": "I couldn't find the amount. Type, for example: 500 gas",
-    "quickCategory": "There is no expense category to save it in"
+    "quickCategory": "There is no expense category to save it in",
+    "currencyInUse": "This account already has history, so its currency can’t change. Create another account in the new currency.",
+    "cashCurrency": "Cash always uses your main currency. For dollars on hand, create another cash account.",
+    "noRate": "An account in another currency needs today’s exchange rate. Connect to the internet once and try again.",
+    "toAmount": "Enter how much arrives in the other account",
+    "ruleMatch": "Enter 2 to 60 characters to look for in the note",
+    "ruleDuplicate": "There's already a rule with that text",
+    "fxRate": "Enter how many pesos one dollar is worth, between 1 and 1000"
   },
   "common": {
     "cancel": "Cancel",
@@ -249,7 +257,7 @@
     "currency": "Currency",
     "currencyChange": "Currency: {label}. Change",
     "currencyNote": "It only changes the symbol shown with amounts. Saved amounts aren't converted.",
-    "fxRate": "Exchange rate on {date}: {rate}. Just for reference: amounts are not converted.",
+    "fxRate": "Exchange rate on {date}: {rate}. Used for equivalents and to add up accounts in another currency; saved amounts are not converted.",
     "fxNone": "With internet, you will see the daily peso–dollar exchange rate here.",
     "fxSource": "Rates By Exchange Rate API",
     "currencyDOP": "Dominican peso (RD$)",
@@ -291,15 +299,17 @@
           "Color",
           "Color palette",
           "Language",
-          "Currency"
+          "Currency",
+          "Use my own rate"
         ]
       },
       "dinero": {
         "title": "Money",
-        "sub": "Accounts, cards, categories",
+        "sub": "Accounts, cards, categories, rules",
         "options": [
           "Accounts and cards",
-          "Manage categories"
+          "Manage categories",
+          "Automatic rules"
         ]
       },
       "avisos": {
@@ -364,7 +374,17 @@
     },
     "language": "Language",
     "languageNote": "Dates and numbers follow the language. The currency doesn't change.",
-    "languageChanged": "Language changed"
+    "languageChanged": "Language changed",
+    "rules": "Automatic rules",
+    "rulesSub": "If the note says “uber”, it goes to Transportation",
+    "fxManualSet": "Use my own rate",
+    "fxManualChange": "Change my rate",
+    "fxManualClear": "Go back to today's rate",
+    "fxManualRate": "You're using your own rate: {rate}. It's used to add up accounts in another currency and for equivalents.",
+    "fxManualTitle": "Your exchange rate",
+    "fxManualMsg": "Pesos per dollar, for example your bank's. It's used instead of today's rate until you remove it.",
+    "fxManualSaved": "Your rate was saved",
+    "fxManualCleared": "Today's rate is used again"
   },
   "avisos": {
     "title": "Reminders",
@@ -482,7 +502,9 @@
     "archive": "Archive",
     "delete": "Delete account",
     "saved": "Account saved",
-    "deleteMsg": "{name} will be deleted. Only possible if it has no transactions, transfers or recurring items."
+    "deleteMsg": "{name} will be deleted. Only possible if it has no transactions, transfers or recurring items.",
+    "currency": "Currency",
+    "currencyHint": "Its transactions and balance use this currency. Totals add it at today’s exchange rate. The currency can’t change after you create it."
   },
   "cuentas": {
     "failed": "Couldn't read the accounts. Switch sections and come back.",
@@ -548,7 +570,11 @@
     "saved": "Transfer saved",
     "warning": "{name} would end up at {amount}. Check that \"From\" and \"To\" are right.",
     "deleteMsg": "This transfer will be deleted and both accounts' balances will go back to how they were.",
-    "deleted": "Transfer deleted"
+    "deleted": "Transfer deleted",
+    "arrives": "Arrives in the other account ({currency})",
+    "arrivesHint": "Left empty, it uses today’s rate ({rate}). Enter what the bank actually gave you if it was different.",
+    "arrivesNoRate": "Enter what arrived in the other account, in its currency.",
+    "arrived": "Arrived {amount}"
   },
   "networth": {
     "title": "Net worth",
@@ -611,7 +637,12 @@
     "whereTitle": "Where does the money go?",
     "noExpenses": "No expenses yet in {month}.",
     "recent": "Recent transactions",
-    "seeAll": "See all"
+    "seeAll": "See all",
+    "freePerDay": {
+      "one": "Free to spend today: {amount}, after what's left to pay",
+      "other": "Free to spend: {amount} a day for the next {count} days, after what's left to pay"
+    },
+    "freeNone": "What's left to pay this month already uses your whole balance"
   },
   "alerts": {
     "label": "Alerts",
@@ -635,6 +666,15 @@
     "cardsOverdue": {
       "one": "Card {names} has an overdue payment",
       "other": "Cards {names} have an overdue payment"
+    },
+    "shortfall": "On {date} your accounts would go negative when paying {name}",
+    "shortfallNoName": "On {date} your accounts would go negative with the pending payments",
+    "priceUp": "{name} went up from {from} to {to}",
+    "priceDown": "{name} went down from {from} to {to}",
+    "unusual": "{name}: {current} so far this month; you usually spend {average}",
+    "duplicates": {
+      "one": "One transaction looks repeated this month",
+      "other": "{count} transactions look repeated this month"
     }
   },
   "compare": {
@@ -662,7 +702,7 @@
     "emptyText": "Tap the + button to add income or an expense for this month.",
     "filters": "Search and filter",
     "searchLabel": "Search by note, category or tag",
-    "searchPlaceholder": "Search note, category or tag",
+    "searchPlaceholder": "Search note, category, tag or >500",
     "kind": "Transaction type",
     "kinds": {
       "todos": "All",
@@ -1072,7 +1112,19 @@
     "accountsSub": "All your accounts added up, with cards subtracted.",
     "accountsName": "Account balance",
     "pdfSaved": "PDF saved to {where}.",
-    "pdfFailed": "Couldn't create the PDF. Please try again."
+    "pdfFailed": "Couldn't create the PDF. Please try again.",
+    "byMerchant": {
+      "title": "Where you spend the most",
+      "sub": "By each expense's note in the period (store, person or place)."
+    },
+    "byTag": {
+      "title": "Spending by tag",
+      "sub": "An expense with several tags counts in each."
+    },
+    "times": {
+      "one": "1 time",
+      "other": "{count} times"
+    }
   },
   "pdf": {
     "savingRate": "Savings rate",
@@ -1153,6 +1205,30 @@
         "Compare your income and expenses over 3, 6 or 12 months.",
         "Tap a category to see how it changed month by month.",
         "Export the month to PDF to keep it or share it."
+      ]
+    },
+    "calendario": {
+      "title": "Calendar",
+      "points": [
+        "Tap a day to see what's paid, what comes in and what you spent.",
+        "Check the dot color: red overdue, amber pending, green done.",
+        "Switch months at the top to plan upcoming payments."
+      ]
+    },
+    "calculadoras": {
+      "title": "Calculators",
+      "points": [
+        "Pick what to calculate at the top: interest, inflation, FIRE or emergency.",
+        "Change any number: the result updates as you type.",
+        "Starts from your averages; nothing you type is saved."
+      ]
+    },
+    "reglas": {
+      "title": "Automatic rules",
+      "points": [
+        "Add a rule with text from the note and its category.",
+        "Type that text in a new expense and the category is picked for you.",
+        "Apply the rule to what you already have when saving it."
       ]
     }
   },
@@ -1236,6 +1312,25 @@
     "dbFailed": "Couldn't open the local database. Close and reopen the app.\n\nDetails: {detail}"
   },
   "changelog": {
+    "1_0_20": [
+      "When you fix a transaction's category, Kuarto offers to make a rule so it's picked automatically next time.",
+      "In Transactions you can search by amount: >500, <1000 or 500-1000, also together with text.",
+      "Help on Calendar, Calculators and Rules; rules and your own rate now show up when searching Settings.",
+      "Fixed: editing a dollar-account expense from Home saved it converted to pesos."
+    ],
+    "1_0_19": [
+      "Automatic rules: if the note says “uber”, the expense goes to Transportation on its own (Settings › Automatic rules).",
+      "Monthly calendar with recurring items, income, card payments, installments and what you spent each day (from Recurring).",
+      "New alerts on Home: price increases on a recurring item, repeated transactions, unusual spending and days when your accounts would go negative.",
+      "Home tells you how much is free to spend per day after what's left to pay.",
+      "Calculators (Plans): compound interest, inflation, financial independence and emergency fund; and in Reports, financial health, where you spend the most and spending by tag.",
+      "You can use your own exchange rate (Settings › Appearance)."
+    ],
+    "1_0_18": [
+      "Accounts in dollars and pesos at the same time: when you create an account you pick its currency, and its transactions and balance use it.",
+      "Transfers between currencies: enter what leaves and what arrives; leave it empty and today's rate is used.",
+      "Balance, available money, net worth, Can I afford it? and reports add everything up in your main currency at today's rate."
+    ],
     "1_0_17": [
       "Can I afford it? now looks at the month day by day: it tells you which day and which payment would leave you short, the lowest point of the month and from when you can buy it.",
       "When you type or dictate a movement, Kuarto also understands the account (\"with the Popular card\"), the date (\"yesterday\", \"3 days ago\") and the tags (#trip), and forgives one typo.",
@@ -1865,5 +1960,163 @@
     "body": "Tap \"Log expense\" and type the amount and a note: 500 gas",
     "action": "Log expense",
     "saved": "{amount} expense saved in {category}"
+  },
+  "reglas": {
+    "title": "Automatic rules",
+    "note": "When a new transaction's note (or the quick phrase, or what you log from the notification) contains the text, the category is picked for you, and optionally the account and a tag. If several match, the longest wins.",
+    "failed": "Couldn't load the rules.",
+    "row": "If it says “{match}”",
+    "empty": "You don't have any rules yet.",
+    "add": "Add rule",
+    "new": "New rule",
+    "edit": "Edit rule",
+    "match": "If the note contains",
+    "matchPlaceholder": "E.g. uber, netflix, grocery",
+    "matchHint": "Capitals and accents don't matter.",
+    "category": "Goes to category",
+    "account": "Account (optional)",
+    "noAccount": "Don't change the account",
+    "tag": "Tag (optional)",
+    "tagPlaceholder": "E.g. work",
+    "save": "Save rule",
+    "saved": "Rule saved",
+    "delete": "Delete rule",
+    "deleteMsg": "The “{match}” rule will be deleted. Transactions it already sorted stay as they are.",
+    "applyTitle": "Also to the ones you already have?",
+    "applyMsg": "Saved transactions whose note matches move to this category (and get the tag). Their account doesn't change, so past balances don't move. Split ones aren't touched.",
+    "apply": "Yes, apply",
+    "applySkip": "Only new ones",
+    "applied": {
+      "one": "Rule saved; 1 transaction changed",
+      "other": "Rule saved; {count} transactions changed"
+    },
+    "offerTitle": "Make a rule?",
+    "offerMsg": "Next time the note says “{match}”, the transaction will go to {name} on its own.",
+    "offerYes": "Make rule",
+    "offerNo": "Just this once"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "open": "See calendar",
+    "failed": "Couldn't load the calendar.",
+    "summary": "{pay} left to pay and {collect} to collect this month.",
+    "eventsCount": "{count} payments or income",
+    "spent": "spent {amount}",
+    "nothing": "Nothing this day.",
+    "spentTitle": "Spent in Transactions",
+    "earnedTitle": "Received in Transactions",
+    "legend": {
+      "overdue": "Overdue",
+      "pending": "Pending",
+      "done": "Done",
+      "moves": "Transactions only"
+    },
+    "kind": {
+      "pago": "Fixed expense",
+      "cobro": "Fixed income",
+      "tarjeta": "Card payment",
+      "cuota": "Debt installment"
+    },
+    "status": {
+      "hecho": "done",
+      "pendiente": "pending",
+      "vencido": "overdue"
+    },
+    "earned": "received {amount}"
+  },
+  "health": {
+    "title": "Financial health",
+    "noData": "With at least one full month of income or expenses you'll see your indicators here.",
+    "basis": {
+      "one": "Based on the last full month.",
+      "other": "Based on the average of the last {count} full months."
+    },
+    "covered": "Emergency fund",
+    "coveredValue": {
+      "one": "{months} month of expenses",
+      "other": "{months} months of expenses"
+    },
+    "coveredHint": {
+      "bueno": "Your available money covers 3 or more months of expenses; the usual guideline is 3 to 6.",
+      "medio": "You cover at least a month. Aim for 3: a savings goal with a date tells you how much to put in each month.",
+      "bajo": "Less than a month: an unexpected expense would leave you with no margin."
+    },
+    "rate": "Savings rate",
+    "rateHint": {
+      "bueno": "You save 20% or more of what comes in, as the 50/30/20 rule suggests.",
+      "medio": "Between 10% and 20%: good progress; the 50/30/20 rule suggests 20%. It counts what you move to goals.",
+      "bajo": "Less than 10% of what comes in goes to savings. It counts what you move to goals in Plans."
+    },
+    "debt": "Debt payments vs. income",
+    "debtHint": {
+      "bueno": "Up to 20%: your payments leave room in the budget.",
+      "medio": "Between 20% and 36%: within what banks usually accept, but with little margin.",
+      "bajo": "Over 36%: payments weigh a lot; in Plans › Debts you can simulate paying off sooner."
+    },
+    "note": "These are general guidelines, not personal advice."
+  },
+  "calc": {
+    "open": "Calculators",
+    "title": "Calculators",
+    "subtitle": "They only calculate with what you type; nothing is saved.",
+    "years": "Years",
+    "tools": {
+      "interes": "Interest",
+      "inflacion": "Inflation",
+      "libertad": "FIRE",
+      "emergencia": "Emergency"
+    },
+    "interes": {
+      "title": "Compound interest",
+      "sub": "How much you'll have saving every month at an annual rate, like a CD or savings account.",
+      "initial": "Starting amount ({currency})",
+      "monthly": "Monthly contribution ({currency})",
+      "rate": "Annual rate (%)",
+      "total": "You'd have",
+      "contributed": "What you put in",
+      "interest": "Earned in interest"
+    },
+    "inflacion": {
+      "title": "Inflation",
+      "sub": "What today's price will cost later, and what that money will be worth if it sits still.",
+      "amount": "Today's amount ({currency})",
+      "rate": "Annual inflation (%)",
+      "future": "It will cost",
+      "power": "That money kept will buy what today costs"
+    },
+    "libertad": {
+      "title": "Financial independence",
+      "sub": "How much you need to live off your savings and when you'd get there. With the 4% rule, it's 25 times a year of expenses.",
+      "expenses": "A year of expenses ({currency})",
+      "withdrawal": "Annual withdrawal (%)",
+      "saved": "What you already have ({currency})",
+      "monthly": "Monthly saving ({currency})",
+      "return": "Annual return after inflation (%)",
+      "target": "You need to have",
+      "when": "You'd get there in",
+      "years": {
+        "one": "{years} year",
+        "other": "{years} years"
+      },
+      "never": "At that pace you won't get there in 100 years",
+      "already": "You're already there",
+      "note": "The 4% rule comes from studies of US stock and bond portfolios; it's a guideline, not a guarantee."
+    },
+    "emergencia": {
+      "title": "Emergency fund",
+      "sub": "What's worth having on hand for the unexpected, and how long it would take to save.",
+      "monthly": "A month of expenses ({currency})",
+      "months": "Months to cover",
+      "saved": "What you already have ({currency})",
+      "saving": "What you can save each month ({currency})",
+      "target": "Your fund should be",
+      "when": "You'd have it in",
+      "monthsValue": {
+        "one": "{count} month",
+        "other": "{count} months"
+      },
+      "never": "Enter how much you can save each month",
+      "already": "You already have it"
+    }
   }
 }

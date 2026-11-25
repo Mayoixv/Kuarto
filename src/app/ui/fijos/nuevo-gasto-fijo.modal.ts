@@ -119,7 +119,7 @@ export class NuevoGastoFijoModalComponent implements OnInit {
   async ngOnInit() {
     const all = await this.container.categories.list();
     this.allCategories.set(all);
-    const choices = await accountChoices(this.container, this.expense?.accountId);
+    const choices = await accountChoices(this.container, this.expense?.accountId, true);
     this.accounts.set([...choices.accounts, ...this.draftAccounts]);
     this.accountId.set(choices.selected);
     if (this.expense?.accountId && this.draftAccounts.some((a) => a.id === this.expense!.accountId)) {

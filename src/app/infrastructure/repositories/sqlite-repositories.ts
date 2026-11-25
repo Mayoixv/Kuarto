@@ -2,6 +2,7 @@ import {
   IAccountRepository,
   IBudgetRepository,
   ICategoryRepository,
+  ICategoryRuleRepository,
   IDebtRepository,
   IRecurringExpenseRepository,
   ISavingsRepository,
@@ -9,6 +10,8 @@ import {
   ITransactionRepository,
 } from '../../application/ports/repositories';
 import { Budget } from '../../domain/budget';
+import { CategoryRule } from '../../domain/rules';
+import { Currency } from '../../domain/currency';
 import { Account, AccountType, CASH_ACCOUNT_ID, Transfer } from '../../domain/account';
 import { Category, CategoryType } from '../../domain/category';
 import { Debt, DebtDirection, DebtPayment } from '../../domain/debts';
@@ -81,6 +84,7 @@ export class SqliteCategoryRepository implements ICategoryRepository {
       { sql: 'UPDATE transaction_splits SET category_id = ? WHERE category_id = ?', params: [p.to, p.from] },
       { sql: 'UPDATE transactions SET category_id = ? WHERE category_id = ?', params: [p.to, p.from] },
       { sql: 'UPDATE recurring_expenses SET category_id = ? WHERE category_id = ?', params: [p.to, p.from] },
+      { sql: 'UPDATE category_rules SET category_id = ? WHERE category_id = ?', params: [p.to, p.from] },
       { sql: 'DELETE FROM categories WHERE id = ?', params: [p.from] },
     ]);
   }
@@ -599,6 +603,7 @@ interface AccountRow {
   due_day: number | null;
   archived: number;
   card_last4: string | null;
+  currency: Currency | null;
 }
 
 interface TransferRow {
@@ -608,6 +613,7 @@ interface TransferRow {
   from_account: string;
   to_account: string;
   note: string;
+  to_amount: number | null;
 }
 
 const toAccount = (r: AccountRow): Account => ({
@@ -620,6 +626,7 @@ const toAccount = (r: AccountRow): Account => ({
   dueDay: r.due_day,
   archived: r.archived === 1,
   cardLast4: r.card_last4,
+  currency: r.currency ?? null,
 });
 
 const toTransfer = (r: TransferRow): Transfer => ({
@@ -629,6 +636,7 @@ const toTransfer = (r: TransferRow): Transfer => ({
   fromAccountId: r.from_account,
   toAccountId: r.to_account,
   note: r.note,
+  toAmount: r.to_amount ?? null,
 });
 
 export class SqliteAccountRepository implements IAccountRepository {
@@ -648,13 +656,13 @@ export class SqliteAccountRepository implements IAccountRepository {
 
   async save(a: Account): Promise<void> {
     await this.db.run(
-      `INSERT INTO accounts (id, name, type, initial_balance, credit_limit, cut_day, due_day, archived, card_last4)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO accounts (id, name, type, initial_balance, credit_limit, cut_day, due_day, archived, card_last4, currency)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET name = excluded.name, type = excluded.type,
          initial_balance = excluded.initial_balance, credit_limit = excluded.credit_limit,
          cut_day = excluded.cut_day, due_day = excluded.due_day, archived = excluded.archived,
-         card_last4 = excluded.card_last4`,
-      [a.id, a.name, a.type, a.initialBalance, a.creditLimit ?? null, a.cutDay ?? null, a.dueDay ?? null, a.archived ? 1 : 0, a.cardLast4 ?? null],
+         card_last4 = excluded.card_last4, currency = excluded.currency`,
+      [a.id, a.name, a.type, a.initialBalance, a.creditLimit ?? null, a.cutDay ?? null, a.dueDay ?? null, a.archived ? 1 : 0, a.cardLast4 ?? null, a.currency ?? null],
     );
   }
 
@@ -680,7 +688,7 @@ export class SqliteAccountRepository implements IAccountRepository {
          + COALESCE((SELECT SUM(CASE WHEN c.type = 'ingreso' THEN t.amount ELSE -t.amount END)
                      FROM transactions t JOIN categories c ON c.id = t.category_id
                      WHERE t.account_id = a.id AND t.date <= ?), 0)
-         + COALESCE((SELECT SUM(amount) FROM transfers WHERE to_account = a.id AND date <= ?), 0)
+         + COALESCE((SELECT SUM(COALESCE(to_amount, amount)) FROM transfers WHERE to_account = a.id AND date <= ?), 0)
          - COALESCE((SELECT SUM(amount) FROM transfers WHERE from_account = a.id AND date <= ?), 0)
          - COALESCE((SELECT SUM(CASE WHEN withdrawal = 1 THEN -amount ELSE amount END)
                      FROM savings_contributions WHERE account_id = a.id AND date <= ?), 0) AS balance
@@ -707,14 +715,45 @@ export class SqliteAccountRepository implements IAccountRepository {
 
   async saveTransfer(t: Transfer): Promise<void> {
     await this.db.run(
-      `INSERT INTO transfers (id, date, amount, from_account, to_account, note) VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO transfers (id, date, amount, from_account, to_account, note, to_amount) VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET date = excluded.date, amount = excluded.amount,
-         from_account = excluded.from_account, to_account = excluded.to_account, note = excluded.note`,
-      [t.id, t.date, t.amount, t.fromAccountId, t.toAccountId, t.note],
+         from_account = excluded.from_account, to_account = excluded.to_account, note = excluded.note,
+         to_amount = excluded.to_amount`,
+      [t.id, t.date, t.amount, t.fromAccountId, t.toAccountId, t.note, t.toAmount ?? null],
     );
   }
 
   async deleteTransfer(id: string): Promise<void> {
     await this.db.run('DELETE FROM transfers WHERE id = ?', [id]);
+  }
+}
+
+interface RuleRow {
+  id: string;
+  match: string;
+  category_id: string;
+  account_id: string | null;
+  tag: string | null;
+}
+
+export class SqliteCategoryRuleRepository implements ICategoryRuleRepository {
+  constructor(private readonly db: SqlDatabase) {}
+
+  async list(): Promise<CategoryRule[]> {
+    const rows = await this.db.all<RuleRow>('SELECT * FROM category_rules ORDER BY match COLLATE NOCASE');
+    return rows.map((r) => ({ id: r.id, match: r.match, categoryId: r.category_id, accountId: r.account_id, tag: r.tag }));
+  }
+
+  async save(r: CategoryRule): Promise<void> {
+    await this.db.run(
+      `INSERT INTO category_rules (id, match, category_id, account_id, tag) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET match = excluded.match, category_id = excluded.category_id,
+         account_id = excluded.account_id, tag = excluded.tag`,
+      [r.id, r.match, r.categoryId, r.accountId ?? null, r.tag ?? null],
+    );
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db.run('DELETE FROM category_rules WHERE id = ?', [id]);
   }
 }

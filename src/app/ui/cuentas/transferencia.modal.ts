@@ -5,10 +5,12 @@ import { AlertController, IonContent, IonIcon, IonInput, ModalController } from 
 import { addIcons } from 'ionicons';
 import { close, swapVertical } from 'ionicons/icons';
 import { APP_CONTAINER } from '../../app.container';
-import { Account, isCard, Transfer } from '../../domain/account';
+import { Account, arrivingAmount, currencyOf, isCard, Transfer } from '../../domain/account';
+import { convertCents } from '../../domain/currency';
+import { ExchangeRateService } from '../exchange-rate.service';
 import { UndoService } from '../undo.service';
 import { CurrencyState } from '../currency-state';
-import { amountToInput, formatMoney, parseAmount, todayIso } from '../format';
+import { amountToInput, formatAccountMoney, parseAmount, todayIso } from '../format';
 import { SuccessCheckComponent } from '../success-check.component';
 import { accountOptions } from './account-choices';
 import { t, errorText } from '../i18n';
@@ -44,22 +46,43 @@ export class TransferenciaModalComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
-  protected readonly currency = inject(CurrencyState).currency;
-  protected readonly money = formatMoney;
+  private readonly mainCurrency = inject(CurrencyState).currency;
+  private readonly rates = inject(ExchangeRateService);
+  protected readonly money = formatAccountMoney;
+  protected readonly amountToInput = amountToInput;
+  /** Entre cuentas de distinta moneda: lo que llega a la de destino. Vacío = lo que da la tasa del día. */
+  protected readonly toAmount = signal('');
   /** Saldo de cada cuenta sin esta transferencia (al editar se descuenta lo que ya movía). */
   private readonly balances = signal(new Map<string, number>());
   protected readonly accountOptions = computed(() => accountOptions(this.accounts()));
+  private readonly fromAccount = computed(() => this.accounts().find((a) => a.id === this.from()));
+  private readonly toAccount = computed(() => this.accounts().find((a) => a.id === this.to()));
+  /** Moneda de la cuenta de origen: en ella se escribe el monto. */
+  protected readonly currency = computed(() => currencyOf(this.fromAccount(), this.mainCurrency()));
+  protected readonly toCurrency = computed(() => currencyOf(this.toAccount(), this.mainCurrency()));
+  protected readonly crossCurrency = computed(() => !!this.toAccount() && this.currency() !== this.toCurrency());
+  /** Lo que llegaría con la tasa del día; null sin tasa o sin monto. */
+  protected readonly suggestedToAmount = computed(() => {
+    const amount = parseAmount(this.amount());
+    const rate = this.rates.rate();
+    return this.crossCurrency() && amount !== null && rate ? convertCents(amount, this.currency(), rate.usdToDop) : null;
+  });
+  private readonly arriving = computed(() =>
+    this.crossCurrency() ? (parseAmount(this.toAmount()) ?? this.suggestedToAmount()) : parseAmount(this.amount()),
+  );
+  protected readonly rateText = computed(() => this.rates.rateText());
 
   /** Cómo quedan las dos cuentas, para ver antes de guardar que el dinero va en la dirección correcta. */
   protected readonly preview = computed(() => {
-    const from = this.accounts().find((a) => a.id === this.from());
-    const to = this.accounts().find((a) => a.id === this.to());
+    const from = this.fromAccount();
+    const to = this.toAccount();
     const amount = parseAmount(this.amount());
-    if (!from || !to || from.id === to.id || amount === null) return null;
+    const arriving = this.arriving();
+    if (!from || !to || from.id === to.id || amount === null || arriving === null) return null;
     const before = (a: Account) => this.balances().get(a.id) ?? a.initialBalance;
     return [
       { account: from, name: from.name, before: before(from), after: before(from) - amount },
-      { account: to, name: to.name, before: before(to), after: before(to) + amount },
+      { account: to, name: to.name, before: before(to), after: before(to) + arriving },
     ];
   });
 
@@ -67,7 +90,7 @@ export class TransferenciaModalComponent implements OnInit {
   protected readonly warning = computed(() => {
     const out = this.preview()?.[0];
     if (!out || isCard(out.account) || out.after >= 0) return null;
-    return t('transfer.warning', { name: out.name, amount: formatMoney(out.after) });
+    return t('transfer.warning', { name: out.name, amount: formatAccountMoney(out.after, out.account) });
   });
   protected readonly toOptions = computed(() => this.accountOptions().filter((o) => o.value !== this.from()));
 
@@ -78,7 +101,13 @@ export class TransferenciaModalComponent implements OnInit {
   });
 
   protected readonly canSave = computed(
-    () => !!this.from() && !!this.to() && this.from() !== this.to() && parseAmount(this.amount()) !== null && !this.saving(),
+    () =>
+      !!this.from() &&
+      !!this.to() &&
+      this.from() !== this.to() &&
+      parseAmount(this.amount()) !== null &&
+      this.arriving() !== null &&
+      !this.saving(),
   );
 
   constructor() {
@@ -95,20 +124,29 @@ export class TransferenciaModalComponent implements OnInit {
     const balances = await this.container.accounts.balances();
     if (tr) {
       balances.set(tr.fromAccountId, (balances.get(tr.fromAccountId) ?? 0) + tr.amount);
-      balances.set(tr.toAccountId, (balances.get(tr.toAccountId) ?? 0) - tr.amount);
+      balances.set(tr.toAccountId, (balances.get(tr.toAccountId) ?? 0) - arrivingAmount(tr));
     }
     this.balances.set(balances);
     if (tr) {
       this.from.set(tr.fromAccountId);
       this.to.set(tr.toAccountId);
       this.amount.set(amountToInput(tr.amount));
+      if (tr.toAmount) this.toAmount.set(amountToInput(tr.toAmount));
       this.date.set(tr.date);
       this.note.set(tr.note);
       return;
     }
     this.from.set(active.find((a) => !isCard(a))?.id ?? null);
     if (this.toAccountId) this.to.set(this.toAccountId);
-    if (this.suggestedAmount) this.amount.set(amountToInput(this.suggestedAmount));
+    if (!this.suggestedAmount) return;
+    const rate = this.rates.rate();
+    if (this.crossCurrency()) {
+      // Lo que falta de la tarjeta va en su moneda: es lo que debe llegar; lo que sale se propone con la tasa del día.
+      this.toAmount.set(amountToInput(this.suggestedAmount));
+      if (rate) this.amount.set(amountToInput(convertCents(this.suggestedAmount, this.toCurrency(), rate.usdToDop)));
+    } else {
+      this.amount.set(amountToInput(this.suggestedAmount));
+    }
   }
 
   protected async confirmDelete() {
@@ -157,6 +195,7 @@ export class TransferenciaModalComponent implements OnInit {
         fromAccountId: this.from()!,
         toAccountId: this.to()!,
         note: this.note(),
+        toAmount: this.crossCurrency() ? this.arriving() : null,
       }, this.transfer?.id);
       this.saved.set(true);
       await new Promise((resolve) => setTimeout(resolve, SUCCESS_VISIBLE_MS));

@@ -25,7 +25,8 @@ import { MonthState } from '../month-state';
 import { PillOption, PillToggleComponent } from '../pill-toggle.component';
 import { exportMonthPdf } from './month-pdf';
 import { LoadingComponent } from '../loading.component';
-import { t } from '../i18n';
+import { t, tn } from '../i18n';
+import { FinancialHealth } from '../../domain/financial-health';
 
 /** Reportes del periodo que termina en el mes visto: por mes, por categoría y saldo de cuentas. */
 @Component({
@@ -58,6 +59,13 @@ export class ReportesPage {
   protected readonly categoryId = signal<string | null>(null);
   private readonly categories = signal<Category[]>([]);
   protected readonly money = formatMoney;
+  protected readonly tn = tn;
+  protected readonly groupCards = (r: Report) => [
+    { key: 'byMerchant', items: r.byMerchant },
+    { key: 'byTag', items: r.byTag },
+  ];
+  /** Indicadores de los últimos meses completos; no dependen del periodo elegido. */
+  protected readonly health = signal<FinancialHealth | null>(null);
   protected readonly percent = formatPercent;
   private loadSeq = 0;
 
@@ -157,8 +165,10 @@ export class ReportesPage {
         count,
         currentMonth(),
       );
+      const health = await this.container.getFinancialHealth.execute(currentMonth()).catch((e) => (console.error(e), null));
       if (seq !== this.loadSeq) return;
       this.report.set(report);
+      this.health.set(health);
       this.categories.set(await this.container.categories.list());
       this.failed.set(false);
     } catch (error) {

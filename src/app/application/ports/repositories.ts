@@ -6,6 +6,7 @@ import { Account, Transfer } from '../../domain/account';
 import { Debt, DebtPayment } from '../../domain/debts';
 import { SavingsContribution, SavingsGoal } from '../../domain/savings';
 import { Attachment, Transaction } from '../../domain/transaction';
+import { CategoryRule } from '../../domain/rules';
 
 export interface ICategoryRepository {
   list(): Promise<Category[]>;
@@ -73,6 +74,12 @@ export interface IAccountRepository {
   getTransfer(id: string): Promise<Transfer | undefined>;
   saveTransfer(transfer: Transfer): Promise<void>;
   deleteTransfer(id: string): Promise<void>;
+}
+
+export interface ICategoryRuleRepository {
+  list(): Promise<CategoryRule[]>;
+  save(rule: CategoryRule): Promise<void>;
+  delete(id: string): Promise<void>;
 }
 
 export interface IDebtRepository {

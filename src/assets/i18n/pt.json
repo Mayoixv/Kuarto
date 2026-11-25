@@ -79,13 +79,21 @@
       "transaction": "Lançamento não encontrado",
       "fixed": "Item fixo não encontrado",
       "fixedMonth": "Item fixo do mês não encontrado",
-      "budget": "Orçamento não encontrado"
+      "budget": "Orçamento não encontrado",
+      "rule": "Essa regra não existe mais"
     },
     "backupKeep": "Escolha quantos backups manter",
     "copySameMonth": "Escolha um mês diferente do destino",
     "copyFixed": "Os pagamentos de Fixos não são copiados: Fixos já os cria todo mês",
     "quickAmount": "Não encontrei o valor. Digite, por exemplo: 500 gasolina",
-    "quickCategory": "Não há uma categoria de gasto para salvá-lo"
+    "quickCategory": "Não há uma categoria de gasto para salvá-lo",
+    "currencyInUse": "Esta conta já tem histórico: a moeda não pode mudar. Crie outra conta na nova moeda.",
+    "cashCurrency": "Dinheiro usa sempre sua moeda principal. Para dólares em mãos, crie outra conta de dinheiro.",
+    "noRate": "Uma conta em outra moeda precisa da cotação do dia. Conecte-se à internet uma vez e tente de novo.",
+    "toAmount": "Digite quanto chega na outra conta",
+    "ruleMatch": "Digite de 2 a 60 caracteres para procurar na nota",
+    "ruleDuplicate": "Já existe uma regra com esse texto",
+    "fxRate": "Digite quantos pesos vale um dólar, entre 1 e 1000"
   },
   "common": {
     "cancel": "Cancelar",
@@ -249,7 +257,7 @@
     "currency": "Moeda",
     "currencyChange": "Moeda: {label}. Mudar",
     "currencyNote": "Só muda o símbolo com que os valores são mostrados. Os valores salvos não são convertidos.",
-    "fxRate": "Câmbio de {date}: {rate}. É só uma referência: os valores não são convertidos.",
+    "fxRate": "Câmbio de {date}: {rate}. Usado nos equivalentes e para somar as contas em outra moeda; os valores salvos não são convertidos.",
     "fxNone": "Com internet, aqui você verá o câmbio do dia entre o peso e o dólar.",
     "fxSource": "Rates By Exchange Rate API",
     "currencyDOP": "Peso dominicano (RD$)",
@@ -291,15 +299,17 @@
           "Cor",
           "Paleta de cores",
           "Idioma",
-          "Moeda"
+          "Moeda",
+          "Usar minha própria cotação"
         ]
       },
       "dinero": {
         "title": "Dinheiro",
-        "sub": "Contas, cartões, categorias",
+        "sub": "Contas, cartões, categorias, regras",
         "options": [
           "Contas e cartões",
-          "Gerenciar categorias"
+          "Gerenciar categorias",
+          "Regras automáticas"
         ]
       },
       "avisos": {
@@ -364,7 +374,17 @@
     },
     "language": "Idioma",
     "languageNote": "Datas e números seguem o idioma. A moeda não muda.",
-    "languageChanged": "Idioma alterado"
+    "languageChanged": "Idioma alterado",
+    "rules": "Regras automáticas",
+    "rulesSub": "Se a nota diz “uber”, vai para Transporte",
+    "fxManualSet": "Usar minha própria cotação",
+    "fxManualChange": "Mudar minha cotação",
+    "fxManualClear": "Voltar à cotação do dia",
+    "fxManualRate": "Você usa sua própria cotação: {rate}. Com ela se somam as contas em outra moeda e se calculam os equivalentes.",
+    "fxManualTitle": "Sua cotação",
+    "fxManualMsg": "Pesos por dólar, por exemplo a do seu banco. É usada no lugar da cotação do dia até você removê-la.",
+    "fxManualSaved": "Cotação própria salva",
+    "fxManualCleared": "A cotação do dia volta a ser usada"
   },
   "avisos": {
     "title": "Avisos",
@@ -482,7 +502,9 @@
     "archive": "Arquivar",
     "delete": "Excluir conta",
     "saved": "Conta salva",
-    "deleteMsg": "{name} será excluída. Só é possível se não tiver lançamentos, transferências nem fixos."
+    "deleteMsg": "{name} será excluída. Só é possível se não tiver lançamentos, transferências nem fixos.",
+    "currency": "Moeda",
+    "currencyHint": "Seus movimentos e saldo ficam nesta moeda. Nos totais, soma com a cotação do dia. Depois de criada, a moeda não muda."
   },
   "cuentas": {
     "failed": "Não foi possível ler as contas. Mude de seção e volte.",
@@ -548,7 +570,11 @@
     "saved": "Transferência salva",
     "warning": "{name} ficaria em {amount}. Confira se \"Sai de\" e \"Entra em\" estão certos.",
     "deleteMsg": "Esta transferência será excluída e os saldos das duas contas voltarão a ser como eram.",
-    "deleted": "Transferência excluída"
+    "deleted": "Transferência excluída",
+    "arrives": "Chega na outra conta ({currency})",
+    "arrivesHint": "Vazio, usa a cotação do dia ({rate}). Digite o que o banco realmente deu se foi outro valor.",
+    "arrivesNoRate": "Digite o que chegou na outra conta, na moeda dela.",
+    "arrived": "Chegou {amount}"
   },
   "networth": {
     "title": "Patrimônio",
@@ -611,7 +637,12 @@
     "whereTitle": "Para onde vai o dinheiro?",
     "noExpenses": "Ainda não há despesas em {month}.",
     "recent": "Últimos lançamentos",
-    "seeAll": "Ver todos"
+    "seeAll": "Ver todos",
+    "freePerDay": {
+      "one": "Livre para gastar hoje: {amount}, depois do que falta pagar",
+      "other": "Livre para gastar: {amount} por dia nos próximos {count} dias, depois do que falta pagar"
+    },
+    "freeNone": "O que falta pagar neste mês já usa todo o seu saldo"
   },
   "alerts": {
     "label": "Alertas",
@@ -635,6 +666,15 @@
     "cardsOverdue": {
       "one": "O cartão {names} tem um pagamento vencido",
       "other": "Os cartões {names} têm um pagamento vencido"
+    },
+    "shortfall": "Em {date} suas contas ficariam negativas ao pagar {name}",
+    "shortfallNoName": "Em {date} suas contas ficariam negativas com os pagamentos pendentes",
+    "priceUp": "{name} subiu de {from} para {to}",
+    "priceDown": "{name} baixou de {from} para {to}",
+    "unusual": "{name}: {current} neste mês; você costuma gastar {average}",
+    "duplicates": {
+      "one": "Um movimento parece repetido neste mês",
+      "other": "{count} movimentos parecem repetidos neste mês"
     }
   },
   "compare": {
@@ -662,7 +702,7 @@
     "emptyText": "Toque no botão + para registrar uma receita ou uma despesa deste mês.",
     "filters": "Buscar e filtrar",
     "searchLabel": "Buscar por nota, categoria ou etiqueta",
-    "searchPlaceholder": "Buscar nota, categoria ou etiqueta",
+    "searchPlaceholder": "Buscar nota, categoria, etiqueta ou >500",
     "kind": "Tipo de lançamento",
     "kinds": {
       "todos": "Todos",
@@ -1072,7 +1112,19 @@
     "accountsSub": "Todas as suas contas somadas, com os cartões subtraindo.",
     "accountsName": "Saldo nas contas",
     "pdfSaved": "PDF salvo em {where}.",
-    "pdfFailed": "Não foi possível criar o PDF. Tente de novo."
+    "pdfFailed": "Não foi possível criar o PDF. Tente de novo.",
+    "byMerchant": {
+      "title": "Onde você gasta mais",
+      "sub": "Pela nota de cada gasto do período (loja, pessoa ou lugar)."
+    },
+    "byTag": {
+      "title": "Gasto por etiqueta",
+      "sub": "Um gasto com várias etiquetas conta em cada uma."
+    },
+    "times": {
+      "one": "1 vez",
+      "other": "{count} vezes"
+    }
   },
   "pdf": {
     "savingRate": "Economia da receita",
@@ -1153,6 +1205,30 @@
         "Compare suas receitas e despesas de 3, 6 ou 12 meses.",
         "Toque numa categoria para ver como mudou mês a mês.",
         "Exporte o mês em PDF para guardar ou compartilhar."
+      ]
+    },
+    "calendario": {
+      "title": "Calendário",
+      "points": [
+        "Toque num dia para ver o que se paga, o que entra e quanto gastou.",
+        "Veja a cor do ponto: vermelho vencido, âmbar pendente, verde feito.",
+        "Mude o mês acima para planejar os próximos pagamentos."
+      ]
+    },
+    "calculadoras": {
+      "title": "Calculadoras",
+      "points": [
+        "Escolha acima o que calcular: juros, inflação, liberdade ou emergência.",
+        "Mude qualquer número: o resultado se atualiza ao digitar.",
+        "Parte das suas médias; nada do que você digita é salvo."
+      ]
+    },
+    "reglas": {
+      "title": "Regras automáticas",
+      "points": [
+        "Adicione uma regra com um texto da nota e sua categoria.",
+        "Digite esse texto num gasto novo e a categoria é escolhida sozinha.",
+        "Aplique a regra também ao que já tem ao salvá-la."
       ]
     }
   },
@@ -1236,6 +1312,25 @@
     "dbFailed": "Não foi possível abrir o banco de dados local. Feche e abra o app de novo.\n\nDetalhe: {detail}"
   },
   "changelog": {
+    "1_0_20": [
+      "Ao corrigir a categoria de um movimento, o Kuarto oferece criar uma regra para que da próxima vez seja escolhida sozinha.",
+      "Em Movimentos você pode buscar por valor: >500, <1000 ou 500-1000, também junto com texto.",
+      "Ajuda em Calendário, Calculadoras e Regras; as regras e a cotação própria aparecem ao buscar em Ajustes.",
+      "Corrigido: editar pelo Início um gasto de uma conta em dólares o salvava convertido em pesos."
+    ],
+    "1_0_19": [
+      "Regras automáticas: se a nota diz “uber”, o gasto vai sozinho para Transporte (Ajustes › Regras automáticas).",
+      "Calendário do mês com fixos, recebimentos, pagamentos de cartão, parcelas e o gasto de cada dia (a partir de Fixos).",
+      "Novos avisos no Início: aumentos de preço de um fixo, movimentos repetidos, gastos fora do normal e dias em que suas contas ficariam negativas.",
+      "O Início mostra quanto fica livre por dia depois do que falta pagar.",
+      "Calculadoras (Planos): juros compostos, inflação, independência financeira e reserva de emergência; e em Relatórios, saúde financeira, onde você gasta mais e gasto por etiqueta.",
+      "Você pode usar sua própria cotação (Ajustes › Aparência)."
+    ],
+    "1_0_18": [
+      "Contas em dólares e em pesos ao mesmo tempo: ao criar uma conta você escolhe a moeda, e os movimentos e o saldo ficam nela.",
+      "Transferências entre moedas: digite o que sai e o que chega; se deixar vazio, usa a cotação do dia.",
+      "Saldo, disponível, patrimônio, Dá para comprar? e relatórios somam tudo na sua moeda principal com a cotação do dia."
+    ],
     "1_0_17": [
       "Dá para comprar? agora olha o mês dia a dia: diz que dia e que pagamento deixariam você sem dinheiro, o ponto mais baixo do mês e a partir de quando dá para comprar.",
       "Ao escrever ou ditar um movimento, o Kuarto também entende a conta («com o cartão Popular»), a data («ontem», «há 3 dias») e as etiquetas (#viagem), e tolera uma letra errada.",
@@ -1873,5 +1968,163 @@
     "body": "Toque em «Registrar gasto» e digite o valor e uma nota: 500 gasolina",
     "action": "Registrar gasto",
     "saved": "Gasto de {amount} em {category} salvo"
+  },
+  "reglas": {
+    "title": "Regras automáticas",
+    "note": "Quando a nota de um movimento novo (ou a frase rápida, ou o que você registra pela notificação) contém o texto, a categoria é escolhida sozinha e, se quiser, a conta e uma etiqueta. Se várias coincidirem, vence a mais longa.",
+    "failed": "Não foi possível carregar as regras.",
+    "row": "Se diz “{match}”",
+    "empty": "Você ainda não tem regras.",
+    "add": "Adicionar regra",
+    "new": "Nova regra",
+    "edit": "Editar regra",
+    "match": "Se a nota contém",
+    "matchPlaceholder": "Ex.: uber, netflix, mercado",
+    "matchHint": "Maiúsculas e acentos não importam.",
+    "category": "Vai para a categoria",
+    "account": "Conta (opcional)",
+    "noAccount": "Não mudar a conta",
+    "tag": "Etiqueta (opcional)",
+    "tagPlaceholder": "Ex.: trabalho",
+    "save": "Salvar regra",
+    "saved": "Regra salva",
+    "delete": "Apagar regra",
+    "deleteMsg": "A regra de “{match}” será apagada. Os movimentos que ela já organizou ficam como estão.",
+    "applyTitle": "Também aos que você já tem?",
+    "applyMsg": "Os movimentos salvos cuja nota coincide passam para esta categoria (e levam a etiqueta). A conta não muda, para não mexer em saldos passados. Os divididos não são alterados.",
+    "apply": "Sim, aplicar",
+    "applySkip": "Só os novos",
+    "applied": {
+      "one": "Regra salva; 1 movimento mudou",
+      "other": "Regra salva; {count} movimentos mudaram"
+    },
+    "offerTitle": "Criar uma regra?",
+    "offerMsg": "Da próxima vez que a nota disser “{match}”, o movimento irá sozinho para {name}.",
+    "offerYes": "Criar regra",
+    "offerNo": "Só desta vez"
+  },
+  "calendar": {
+    "title": "Calendário",
+    "open": "Ver no calendário",
+    "failed": "Não foi possível carregar o calendário.",
+    "summary": "Falta pagar {pay} e receber {collect} neste mês.",
+    "eventsCount": "{count} pagamentos ou recebimentos",
+    "spent": "gasto {amount}",
+    "nothing": "Nada neste dia.",
+    "spentTitle": "Gasto em Movimentos",
+    "earnedTitle": "Recebido em Movimentos",
+    "legend": {
+      "overdue": "Vencido",
+      "pending": "Pendente",
+      "done": "Feito",
+      "moves": "Só movimentos"
+    },
+    "kind": {
+      "pago": "Gasto fixo",
+      "cobro": "Receita fixa",
+      "tarjeta": "Pagamento do cartão",
+      "cuota": "Parcela de dívida"
+    },
+    "status": {
+      "hecho": "feito",
+      "pendiente": "pendente",
+      "vencido": "vencido"
+    },
+    "earned": "recebido {amount}"
+  },
+  "health": {
+    "title": "Saúde financeira",
+    "noData": "Com pelo menos um mês completo de receitas ou gastos você verá seus indicadores aqui.",
+    "basis": {
+      "one": "Com a média do último mês completo.",
+      "other": "Com a média dos últimos {count} meses completos."
+    },
+    "covered": "Reserva de emergência",
+    "coveredValue": {
+      "one": "{months} mês de gastos",
+      "other": "{months} meses de gastos"
+    },
+    "coveredHint": {
+      "bueno": "Seu dinheiro disponível cobre 3 meses ou mais de gastos; o habitual é de 3 a 6.",
+      "medio": "Você cobre pelo menos um mês. Mire em 3: uma meta com data diz quanto guardar por mês.",
+      "bajo": "Menos de um mês: um gasto inesperado deixaria você sem margem."
+    },
+    "rate": "Taxa de poupança",
+    "rateHint": {
+      "bueno": "Você poupa 20% ou mais do que entra, como sugere a regra 50/30/20.",
+      "medio": "Entre 10% e 20%: vai bem; a regra 50/30/20 sugere 20%. Conta o que você passa para metas.",
+      "bajo": "Menos de 10% do que entra vai para a poupança. Conta o que você passa para metas em Planos."
+    },
+    "debt": "Parcelas de dívidas sobre a renda",
+    "debtHint": {
+      "bueno": "Até 20%: as parcelas deixam espaço no orçamento.",
+      "medio": "Entre 20% e 36%: dentro do que os bancos costumam aceitar, mas com pouca margem.",
+      "bajo": "Mais de 36%: as parcelas pesam muito; em Planos › Dívidas você pode simular como quitar antes."
+    },
+    "note": "São orientações gerais, não uma recomendação pessoal."
+  },
+  "calc": {
+    "open": "Calculadoras",
+    "title": "Calculadoras",
+    "subtitle": "Só calculam com o que você digita; nada é salvo.",
+    "years": "Anos",
+    "tools": {
+      "interes": "Juros",
+      "inflacion": "Inflação",
+      "libertad": "Liberdade",
+      "emergencia": "Emergência"
+    },
+    "interes": {
+      "title": "Juros compostos",
+      "sub": "Quanto você terá guardando todo mês com uma taxa anual, como um CDB ou poupança.",
+      "initial": "Valor inicial ({currency})",
+      "monthly": "Aporte mensal ({currency})",
+      "rate": "Taxa anual (%)",
+      "total": "Você teria",
+      "contributed": "O que você colocou",
+      "interest": "Ganho em juros"
+    },
+    "inflacion": {
+      "title": "Inflação",
+      "sub": "Quanto custará amanhã o que hoje custa um valor, e quanto valerá esse dinheiro parado.",
+      "amount": "Valor de hoje ({currency})",
+      "rate": "Inflação anual (%)",
+      "future": "Custará",
+      "power": "Esse dinheiro guardado comprará o que hoje custa"
+    },
+    "libertad": {
+      "title": "Independência financeira",
+      "sub": "Quanto você precisa juntar para viver das economias e quando chegaria. Com a regra dos 4%, são 25 vezes o gasto de um ano.",
+      "expenses": "Gasto de um ano ({currency})",
+      "withdrawal": "Retirada anual (%)",
+      "saved": "O que você já tem ({currency})",
+      "monthly": "Poupança mensal ({currency})",
+      "return": "Rentabilidade anual após inflação (%)",
+      "target": "Você precisa juntar",
+      "when": "Você chegaria em",
+      "years": {
+        "one": "{years} ano",
+        "other": "{years} anos"
+      },
+      "never": "Nesse ritmo não se chega em 100 anos",
+      "already": "Você já chegou",
+      "note": "A regra dos 4% vem de estudos sobre carteiras de ações e títulos nos EUA; é uma referência, não uma garantia."
+    },
+    "emergencia": {
+      "title": "Reserva de emergência",
+      "sub": "O que convém ter à mão para um imprevisto, e quanto tempo levaria para juntar.",
+      "monthly": "Gasto de um mês ({currency})",
+      "months": "Meses a cobrir",
+      "saved": "O que você já tem ({currency})",
+      "saving": "O que você pode guardar por mês ({currency})",
+      "target": "Sua reserva deveria ser",
+      "when": "Você teria em",
+      "monthsValue": {
+        "one": "{count} mês",
+        "other": "{count} meses"
+      },
+      "never": "Digite quanto você pode guardar por mês",
+      "already": "Você já tem"
+    }
   }
 }

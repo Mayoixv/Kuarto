@@ -80,6 +80,14 @@
             {{ t('inicio.noIncome') }}
           }
         </p>
+        @if (freeDaily(); as f) {
+          <!-- Sin nada pendiente y con el balance ya en negativo no hay nada que añadir: el aviso de arriba lo dice. -->
+          @if (f.perDay > 0) {
+            <p class="hero-fx">{{ tn('inicio.freePerDay', f.days, { amount: money(f.perDay) }) }}</p>
+          } @else if (f.pending > 0) {
+            <p class="hero-fx">{{ t('inicio.freeNone') }}</p>
+          }
+        }
         <button type="button" class="afford" (click)="afford()">
           <ion-icon name="wallet-outline" aria-hidden="true"></ion-icon>
           {{ t('afford.title') }}

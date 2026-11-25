@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideIonicAngular } from '@ionic/angular';
+import { provideRouter } from '@angular/router';
 import { APP_CONTAINER, buildContainer } from '../../app.container';
 import {
   InMemoryBudgets,
   InMemoryAccounts,
   InMemoryCategories,
+  InMemoryCategoryRules,
   InMemoryDebts,
   InMemoryRecurring,
   InMemorySavings,
@@ -29,6 +31,7 @@ async function render(withData: boolean) {
     backup: { dump: () => Promise.reject(), restore: () => Promise.reject(), wipe: () => Promise.reject() },
     debts: new InMemoryDebts(),
     accounts: new InMemoryAccounts(transactions, categories),
+    rules: new InMemoryCategoryRules(),
     secrets: new InMemorySettings(),
   };
   repos.categories.items.set('ren', { id: 'ren', name: 'Alquiler', type: 'fijo' });
@@ -46,7 +49,7 @@ async function render(withData: boolean) {
   }
   TestBed.configureTestingModule({
     imports: [FijosPage],
-    providers: [provideIonicAngular(), { provide: APP_CONTAINER, useValue: container }],
+    providers: [provideIonicAngular(), provideRouter([]), { provide: APP_CONTAINER, useValue: container }],
   });
   TestBed.inject(MonthState).month.set(month);
   const fixture = TestBed.createComponent(FijosPage);

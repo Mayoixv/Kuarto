@@ -186,12 +186,25 @@
         <p class="note">{{ t('ajustes.currencyNote') }}</p>
         <p class="note">
           @if (fx.rateText(); as rate) {
-            {{ t('ajustes.fxRate', { date: fx.rateDay() ?? '', rate }) }}
-            <a class="fx-source" href="https://www.exchangerate-api.com" target="_blank" rel="noopener">{{ t('ajustes.fxSource') }}</a>
+            @if (fx.isManual()) {
+              {{ t('ajustes.fxManualRate', { rate }) }}
+            } @else {
+              {{ t('ajustes.fxRate', { date: fx.rateDay() ?? '', rate }) }}
+              <a class="fx-source" href="https://www.exchangerate-api.com" target="_blank" rel="noopener">{{ t('ajustes.fxSource') }}</a>
+            }
           } @else {
             {{ t('ajustes.fxNone') }}
           }
         </p>
+        <button type="button" class="btn-secondary fx-manual" (click)="askManualRate()">
+          {{ fx.isManual() ? t('ajustes.fxManualChange') : t('ajustes.fxManualSet') }}
+        </button>
+        @if (fx.isManual()) {
+          <button type="button" class="link-button" (click)="clearManualRate()">{{ t('ajustes.fxManualClear') }}</button>
+        }
+        @if (fxError(); as message) {
+          <p class="error" role="alert">{{ message }}</p>
+        }
       </section>
     }
 
@@ -212,6 +225,15 @@
               <span class="row-text">
                 <span class="row-title">{{ t('ajustes.categories') }}</span>
                 <span class="row-sub">{{ t('ajustes.categoriesSub') }}</span>
+              </span>
+              <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
+            </a>
+          </li>
+          <li>
+            <a routerLink="/ajustes/reglas" class="row">
+              <span class="row-text">
+                <span class="row-title">{{ t('ajustes.rules') }}</span>
+                <span class="row-sub">{{ t('ajustes.rulesSub') }}</span>
               </span>
               <ion-icon name="chevron-forward" aria-hidden="true"></ion-icon>
             </a>

@@ -311,7 +311,12 @@ li + li .row {
   row-gap: 0;
 }
 
-.row > .avatar,
+/* El círculo ocupa su columna; con display: contents perdía el fondo y el ícono quedaba suelto arriba del texto. */
+.row > .avatar {
+  grid-area: avatar;
+  align-self: center;
+}
+
 .row-text {
   display: contents;
 }

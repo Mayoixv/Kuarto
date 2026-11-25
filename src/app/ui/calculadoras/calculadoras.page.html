@@ -1,0 +1,100 @@
+<ion-content class="surface-light" [fullscreen]="true">
+  <header class="screen-head">
+    <button type="button" class="back" [attr.aria-label]="t('common.goBack')" (click)="back()">
+      <ion-icon name="chevron-back" aria-hidden="true"></ion-icon>
+      {{ t('common.goBack') }}
+    </button>
+    <div class="title-row">
+      <h1 class="screen-title">{{ t('calc.title') }}</h1>
+      <app-help-button topic="calculadoras"></app-help-button>
+    </div>
+    <p class="subtitle">{{ t('calc.subtitle') }}</p>
+  </header>
+
+  <app-pill-toggle class="tools" [label]="t('calc.title')" [options]="options()" [value]="tool()" (valueChange)="setTool($event)"></app-pill-toggle>
+
+  <section class="card" aria-live="polite">
+    @switch (tool()) {
+      @case ('interes') {
+        <h2 class="card-title">{{ t('calc.interes.title') }}</h2>
+        <p class="card-sub">{{ t('calc.interes.sub') }}</p>
+        <div class="fields">
+          <ion-input [label]="t('calc.interes.initial', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="ciInitial()" (ionInput)="ciInitial.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.interes.monthly', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="ciMonthly()" (ionInput)="ciMonthly.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.interes.rate')" label-placement="floating" type="number" inputmode="decimal" [value]="ciRate()" (ionInput)="ciRate.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.years')" label-placement="floating" type="number" inputmode="numeric" [value]="ciYears()" (ionInput)="ciYears.set(value($event))"></ion-input>
+        </div>
+        <dl class="result">
+          <div><dt>{{ t('calc.interes.total') }}</dt><dd class="big">{{ money(ci().total) }}</dd></div>
+          <div><dt>{{ t('calc.interes.contributed') }}</dt><dd>{{ money(ci().contributed) }}</dd></div>
+          <div><dt>{{ t('calc.interes.interest') }}</dt><dd>{{ money(ci().interest) }}</dd></div>
+        </dl>
+      }
+      @case ('inflacion') {
+        <h2 class="card-title">{{ t('calc.inflacion.title') }}</h2>
+        <p class="card-sub">{{ t('calc.inflacion.sub') }}</p>
+        <div class="fields">
+          <ion-input [label]="t('calc.inflacion.amount', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="infAmount()" (ionInput)="infAmount.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.inflacion.rate')" label-placement="floating" type="number" inputmode="decimal" [value]="infRate()" (ionInput)="infRate.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.years')" label-placement="floating" type="number" inputmode="numeric" [value]="infYears()" (ionInput)="infYears.set(value($event))"></ion-input>
+        </div>
+        <dl class="result">
+          <div><dt>{{ t('calc.inflacion.future') }}</dt><dd class="big">{{ money(inf().future) }}</dd></div>
+          <div><dt>{{ t('calc.inflacion.power') }}</dt><dd>{{ money(inf().power) }}</dd></div>
+        </dl>
+      }
+      @case ('libertad') {
+        <h2 class="card-title">{{ t('calc.libertad.title') }}</h2>
+        <p class="card-sub">{{ t('calc.libertad.sub') }}</p>
+        <div class="fields">
+          <ion-input [label]="t('calc.libertad.expenses', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="fiExpenses()" (ionInput)="fiExpenses.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.libertad.withdrawal')" label-placement="floating" type="number" inputmode="decimal" [value]="fiWithdrawal()" (ionInput)="fiWithdrawal.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.libertad.saved', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="fiSaved()" (ionInput)="fiSaved.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.libertad.monthly', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="fiMonthly()" (ionInput)="fiMonthly.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.libertad.return')" label-placement="floating" type="number" inputmode="decimal" [value]="fiReturn()" (ionInput)="fiReturn.set(value($event))"></ion-input>
+        </div>
+        <dl class="result">
+          <div><dt>{{ t('calc.libertad.target') }}</dt><dd class="big">{{ money(fi().target) }}</dd></div>
+          <div>
+            <dt>{{ t('calc.libertad.when') }}</dt>
+            <dd>
+              @if (fi().years === null) {
+                {{ t('calc.libertad.never') }}
+              } @else if (fi().years === 0) {
+                {{ t('calc.libertad.already') }}
+              } @else {
+                {{ tn('calc.libertad.years', fi().years!, { years: fi().years! }) }}
+              }
+            </dd>
+          </div>
+        </dl>
+        <p class="card-sub">{{ t('calc.libertad.note') }}</p>
+      }
+      @case ('emergencia') {
+        <h2 class="card-title">{{ t('calc.emergencia.title') }}</h2>
+        <p class="card-sub">{{ t('calc.emergencia.sub') }}</p>
+        <div class="fields">
+          <ion-input [label]="t('calc.emergencia.monthly', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="efMonthly()" (ionInput)="efMonthly.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.emergencia.months')" label-placement="floating" type="number" inputmode="numeric" [value]="efMonths()" (ionInput)="efMonths.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.emergencia.saved', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="efSaved()" (ionInput)="efSaved.set(value($event))"></ion-input>
+          <ion-input [label]="t('calc.emergencia.saving', { currency: currency() })" label-placement="floating" type="number" inputmode="decimal" [value]="efSaving()" (ionInput)="efSaving.set(value($event))"></ion-input>
+        </div>
+        <dl class="result">
+          <div><dt>{{ t('calc.emergencia.target') }}</dt><dd class="big">{{ money(ef().target) }}</dd></div>
+          <div>
+            <dt>{{ t('calc.emergencia.when') }}</dt>
+            <dd>
+              @if (ef().months === null) {
+                {{ t('calc.emergencia.never') }}
+              } @else if (ef().months === 0) {
+                {{ t('calc.emergencia.already') }}
+              } @else {
+                {{ tn('calc.emergencia.monthsValue', ef().months!) }}
+              }
+            </dd>
+          </div>
+        </dl>
+      }
+    }
+  </section>
+</ion-content>

@@ -5,6 +5,10 @@
       <app-help-button topic="fijos"></app-help-button>
     </div>
     <app-month-switcher></app-month-switcher>
+    <a routerLink="/calendario" class="calendar-link">
+      <ion-icon name="calendar-outline" aria-hidden="true"></ion-icon>
+      {{ t('calendar.open') }}
+    </a>
   </header>
 
   <p class="sr-only" aria-live="polite">{{ liveMessage() }}</p>

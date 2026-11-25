@@ -55,3 +55,23 @@
     animation: none;
   }
 }
+
+/* Enlace a las calculadoras en la cabecera de Planes. */
+.tools-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 600;
+  // Subrayado como "Ver en calendario" en Fijos: los dos son enlaces a otra pantalla.
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+  }
+}

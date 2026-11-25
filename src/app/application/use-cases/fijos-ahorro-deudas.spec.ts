@@ -239,6 +239,7 @@ describe('alertas de Inicio', () => {
       cardsDue: [],
       cardsOverdue: [],
       cardsHighUse: [],
+      insights: null,
       overdue: ['Luz'],
       dueSoon: ['Internet'],
       exceeded: ['Comida'],

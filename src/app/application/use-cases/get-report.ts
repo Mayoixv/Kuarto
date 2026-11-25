@@ -1,4 +1,7 @@
+import { CategoryType, isExpenseType } from '../../domain/category';
 import { expenseBreakdown } from '../../domain/expense-breakdown';
+import { SpendingGroup, spendingByNote, spendingByTag } from '../../domain/spending-groups';
+import { Transaction } from '../../domain/transaction';
 import { addMonths, dateInMonth, daysInMonth, MonthKey } from '../../domain/month';
 import { MonthlySummary, summarizeMonth } from '../../domain/monthly-summary';
 import {
@@ -8,6 +11,7 @@ import {
   ITransactionRepository,
 } from '../ports/repositories';
 import { GetMonthRecurringExpenses } from './get-month-recurring-expenses';
+import { LoadMoneyConverter, MoneyConverter } from './money-converter';
 
 export interface CategoryTrend {
   categoryId: string;
@@ -37,6 +41,9 @@ export interface Report {
   accountsAtClose: number[];
   /** Solo si el periodo termina en el mes en curso. */
   projection: Projection | null;
+  /** Gasto del periodo por etiqueta y por comercio (la nota), de mayor a menor. */
+  byTag: SpendingGroup[];
+  byMerchant: SpendingGroup[];
 }
 
 /** Datos de la pantalla de reportes para los `count` meses que terminan en `endMonth`. */
@@ -47,12 +54,13 @@ export class GetReport {
     private readonly savings: ISavingsRepository,
     private readonly accounts: IAccountRepository,
     private readonly recurring: GetMonthRecurringExpenses,
+    private readonly converter: Pick<LoadMoneyConverter, 'execute'> = { execute: async () => MoneyConverter.identity() },
   ) {}
 
   async execute(endMonth: MonthKey, requested: number, currentMonth: MonthKey): Promise<Report> {
     const count = Math.max(1, Math.floor(requested) || 1);
     const months = Array.from({ length: count }, (_, i) => addMonths(endMonth, i - count + 1));
-    const categories = await this.categories.list();
+    const [categories, converter] = await Promise.all([this.categories.list(), this.converter.execute()]);
     const perMonth = await Promise.all(
       months.map(async (m) => {
         const [transactions, contributions, balances] = await Promise.all([
@@ -61,9 +69,10 @@ export class GetReport {
           this.accounts.balances(dateInMonth(m, daysInMonth(m))),
         ]);
         return {
+          transactions,
           summary: summarizeMonth(m, transactions, categories, contributions),
           slices: expenseBreakdown(m, transactions, categories),
-          accounts: [...balances.values()].reduce((s, b) => s + b, 0),
+          accounts: [...balances].reduce((s, [id, b]) => s + converter.ofAccount(b, id), 0),
         };
       }),
     );
@@ -84,7 +93,14 @@ export class GetReport {
       categories: [...trends.values()].sort((a, b) => b.total - a.total),
       accountsAtClose: perMonth.map((p) => p.accounts),
       projection: endMonth === currentMonth ? await this.project(perMonth.at(-1)!.summary, categories, endMonth) : null,
+      ...this.groups(perMonth.flatMap((p) => p.transactions), categories),
     };
+  }
+
+  private groups(all: Transaction[], categories: { id: string; type: CategoryType }[]) {
+    const expense = new Set(categories.filter((c) => isExpenseType(c.type)).map((c) => c.id));
+    const isExpense = (id: string) => expense.has(id);
+    return { byTag: spendingByTag(all, isExpense), byMerchant: spendingByNote(all, isExpense) };
   }
 
   private async project(summary: MonthlySummary, categories: { id: string; type: string }[], month: MonthKey): Promise<Projection> {

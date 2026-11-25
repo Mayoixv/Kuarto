@@ -19,12 +19,13 @@ import {
   isCard,
   Transfer,
 } from '../../domain/account';
-import { adjustmentText, DineroFormService } from '../dinero/dinero-form.service';
+import { transferAmountText, transferArrivedText, adjustmentText, DineroFormService } from '../dinero/dinero-form.service';
 import { adjustmentOf } from '../../domain/account';
 import {
   amountToInput,
   currentMonth,
   formatDay,
+  formatAccountMoney,
   formatMoney,
   formatPercent,
   monthLabel,
@@ -32,6 +33,7 @@ import {
   todayIso,
 } from '../format';
 import { MonthState } from '../month-state';
+import { MoneyConverter } from '../../application/use-cases/money-converter';
 import { accountTypeLabel } from './account-choices';
 import { LoadingComponent } from '../loading.component';
 import { t } from '../i18n';
@@ -96,12 +98,14 @@ export class CuentasViewComponent {
   readonly focus = input<string>();
 
   private readonly views = signal<AccountView[] | null>(null);
+  /** Para sumar en cada grupo cuentas de distinta moneda. */
+  private readonly converter = signal(MoneyConverter.identity());
   protected readonly transfers = signal<Transfer[]>([]);
   private readonly cardStatuses = signal<CardStatus[]>([]);
   protected readonly failed = signal(false);
   protected readonly showArchived = signal(false);
   protected readonly liveMessage = signal('');
-  protected readonly money = formatMoney;
+  protected readonly money = formatAccountMoney;
   protected readonly day = formatDay;
   protected readonly min = Math.min;
   protected readonly monthName = () => monthLabel(currentMonth());
@@ -111,7 +115,9 @@ export class CuentasViewComponent {
     const statuses = new Map(this.cardStatuses().map((c) => [c.account.id, c]));
     const active = (this.views() ?? []).filter((v) => !v.account.archived);
     const of = (key: GroupKey) => active.filter((v) => groupOf(v.account) === key);
-    const sum = (key: GroupKey) => of(key).reduce((t, v) => t + v.balance, 0);
+    const c = this.converter();
+    // El total del grupo va en la moneda principal; cada fila, en la de su cuenta.
+    const sum = (key: GroupKey) => of(key).reduce((t, v) => t + c.toMain(v.balance, v.account.currency), 0);
     const rows = (key: GroupKey) => of(key).map((v) => withStatus(toRow(v), statuses.get(v.account.id)));
     return [
       { key: 'cuentas', ...groupText('cuentas'), total: formatMoney(sum('cuentas')), rows: rows('cuentas'), addType: 'banco' },
@@ -137,6 +143,7 @@ export class CuentasViewComponent {
     () =>
       new Map((this.views() ?? []).map((v) => [v.account.id, v.account.name])),
   );
+  private readonly byId = computed(() => new Map((this.views() ?? []).map((v) => [v.account.id, v.account])));
 
   constructor() {
     addIcons({ add, chevronForward, swapHorizontal });
@@ -148,15 +155,19 @@ export class CuentasViewComponent {
 
   protected transferText(transfer: Transfer): string {
     const n = this.names();
-    const adjustment = adjustmentText(transfer, n);
+    const adjustment = adjustmentText(transfer, n, this.byId());
     if (adjustment) return adjustment.title;
     return `${n.get(transfer.fromAccountId) ?? t('cuentas.account')} → ${n.get(transfer.toAccountId) ?? t('cuentas.account')}`;
   }
 
   protected readonly isAdjustment = (transfer: Transfer) => !!adjustmentOf(transfer);
 
+  protected arrived(transfer: Transfer): string | null {
+    return transferArrivedText(transfer, this.byId());
+  }
+
   protected transferAmount(transfer: Transfer): string {
-    return adjustmentText(transfer, this.names())?.amount ?? formatMoney(transfer.amount);
+    return adjustmentText(transfer, this.names(), this.byId())?.amount ?? transferAmountText(transfer, this.byId());
   }
 
   protected openAccount(view: AccountView) {
@@ -224,11 +235,13 @@ export class CuentasViewComponent {
 
   private async load() {
     try {
-      const [overview, transfers, cards] = await Promise.all([
+      const [overview, transfers, cards, converter] = await Promise.all([
         this.container.getAccountsOverview.execute(),
         this.container.accounts.listTransfers(currentMonth()),
         this.container.getCardStatuses.execute(todayIso()),
+        this.container.loadConverter.execute(),
       ]);
+      this.converter.set(converter);
       this.cardStatuses.set(cards);
       this.transfers.set(transfers);
       this.views.set(overview.accounts);
@@ -244,17 +257,18 @@ export class CuentasViewComponent {
 
 function toRow(view: AccountView): Row {
   const a = view.account;
+  const money = (cents: number) => formatAccountMoney(cents, a);
   let detail = accountTypeLabel(a.type);
   if (isCard(a) && a.creditLimit) {
     const used = Math.max(0, -view.balance);
-    detail = t('cuentas.usedOf', { percent: formatPercent((used / a.creditLimit) * 100), limit: formatMoney(a.creditLimit), cut: a.cutDay ?? '', due: a.dueDay ?? '' });
+    detail = t('cuentas.usedOf', { percent: formatPercent((used / a.creditLimit) * 100), limit: money(a.creditLimit), cut: a.cutDay ?? '', due: a.dueDay ?? '' });
   }
   const owed = Math.max(0, -view.balance);
   const card = isCard(a)
     ? {
         last4: a.cardLast4 ?? null,
         usedPercent: a.creditLimit ? Math.min(100, (owed / a.creditLimit) * 100) : null,
-        usedText: a.creditLimit ? t('cuentas.usedShort', { percent: formatPercent((owed / a.creditLimit) * 100), limit: formatMoney(a.creditLimit) }) : null,
+        usedText: a.creditLimit ? t('cuentas.usedShort', { percent: formatPercent((owed / a.creditLimit) * 100), limit: money(a.creditLimit) }) : null,
         days: t('cuentas.days', { cut: a.cutDay ?? '', due: a.dueDay ?? '' }),
       }
     : undefined;
@@ -264,7 +278,7 @@ function toRow(view: AccountView): Row {
     name: a.name,
     detail,
     // En una tarjeta se muestra lo que se debe, sin signo.
-    balance: formatMoney(isCard(a) ? Math.max(0, -view.balance) : view.balance),
+    balance: money(isCard(a) ? Math.max(0, -view.balance) : view.balance),
     negative: !isCard(a) && view.balance < 0,
   };
 }
@@ -273,13 +287,14 @@ function withStatus(row: Row, status: CardStatus | undefined): Row {
   if (!status) return row;
   const cut = formatDay(status.lastCut);
   const due = formatDay(status.dueDate);
-  const amount = formatMoney(status.pending);
+  const money = (cents: number) => formatAccountMoney(cents, row.view.account);
+  const amount = money(status.pending);
   let statusText: string;
   if (status.statementDebt === 0) statusText = t('cuentas.nothingToPay', { cut });
   else if (status.pending === 0) statusText = t('cuentas.statementPaid', { cut });
   else if (status.daysToDue < 0) statusText = t('cuentas.overdue', { due, amount, cut });
   else statusText = t('cuentas.payBefore', { amount, due, cut });
-  if (status.cycleCharges > 0) statusText += t('cuentas.newCharges', { amount: formatMoney(status.cycleCharges) });
+  if (status.cycleCharges > 0) statusText += t('cuentas.newCharges', { amount: money(status.cycleCharges) });
   return {
     ...row,
     status,

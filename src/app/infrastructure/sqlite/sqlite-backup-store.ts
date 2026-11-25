@@ -21,6 +21,7 @@ const TABLES = [
   'debts',
   'debt_payments',
   'transfers',
+  'category_rules',
 ];
 
 type Row = Record<string, string | number | null>;

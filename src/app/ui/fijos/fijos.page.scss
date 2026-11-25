@@ -235,3 +235,23 @@
   color: #fff;
   font-size: 20px;
 }
+
+/* Enlace al calendario del mes, debajo del selector de mes. */
+.calendar-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  // Fijos es una pantalla oscura: el violeta de --accent no llega a 4.5:1 sobre ella.
+  color: var(--text-on-dark);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:focus-visible {
+    outline: 3px solid var(--text-on-dark);
+    outline-offset: 2px;
+  }
+}

@@ -2,10 +2,10 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { alertCircle, cardOutline, chevronForward, timeOutline, trendingUpOutline } from 'ionicons/icons';
+import { alertCircle, cardOutline, chevronForward, copyOutline, timeOutline, trendingUpOutline } from 'ionicons/icons';
 import { APP_CONTAINER } from '../../app.container';
 import { Alerts } from '../../application/use-cases/get-alerts';
-import { currentMonth, todayIso } from '../format';
+import { currentMonth, formatDay, formatMoney, todayIso } from '../format';
 import { MonthState } from '../month-state';
 import { listText, t, tn } from '../i18n';
 
@@ -14,7 +14,7 @@ interface Alert {
   icon: string;
   tone: 'danger' | 'warning';
   text: string;
-  target: 'fijos' | 'presupuestos' | 'cuentas';
+  target: 'fijos' | 'presupuestos' | 'cuentas' | 'movimientos';
 }
 
 /** "Luz", "Luz y Agua", "Luz, Agua y 2 más". */
@@ -83,6 +83,40 @@ function toAlerts(a: Alerts): Alert[] {
       target: 'cuentas',
     });
   }
+  const i = a.insights;
+  if (i?.shortfall) {
+    out.push({
+      key: 'shortfall',
+      icon: 'alert-circle',
+      tone: 'danger',
+      text: i.shortfall.label
+        ? t('alerts.shortfall', { date: formatDay(i.shortfall.date), name: i.shortfall.label })
+        : t('alerts.shortfallNoName', { date: formatDay(i.shortfall.date) }),
+      target: 'fijos',
+    });
+  }
+  for (const p of i?.priceChanges ?? []) {
+    out.push({
+      key: 'price-' + p.name,
+      icon: 'trending-up-outline',
+      tone: 'warning',
+      text: t(p.to > p.from ? 'alerts.priceUp' : 'alerts.priceDown', { name: p.name, from: formatMoney(p.from), to: formatMoney(p.to) }),
+      target: 'fijos',
+    });
+  }
+  if (i?.unusual.length) {
+    const u = i.unusual[0];
+    out.push({
+      key: 'unusual',
+      icon: 'trending-up-outline',
+      tone: 'warning',
+      text: t('alerts.unusual', { name: u.name, current: formatMoney(u.current), average: formatMoney(u.average) }),
+      target: 'movimientos',
+    });
+  }
+  if (i?.duplicates) {
+    out.push({ key: 'duplicates', icon: 'copy-outline', tone: 'warning', text: tn('alerts.duplicates', i.duplicates), target: 'movimientos' });
+  }
   return out;
 }
 
@@ -103,7 +137,7 @@ export class AlertsRowComponent {
   protected readonly visible = computed(() => this.monthState.month() === currentMonth() && this.alerts().length > 0);
 
   constructor() {
-    addIcons({ alertCircle, cardOutline, chevronForward, timeOutline, trendingUpOutline });
+    addIcons({ alertCircle, cardOutline, chevronForward, copyOutline, timeOutline, trendingUpOutline });
     effect(() => {
       this.monthState.version();
       this.load();
@@ -112,7 +146,8 @@ export class AlertsRowComponent {
 
   protected open(alert: Alert) {
     if (alert.target !== 'presupuestos') {
-      this.router.navigateByUrl(alert.target === 'fijos' ? '/tabs/fijos' : '/tabs/dinero?ver=tarjetas');
+      const urls = { fijos: '/tabs/fijos', cuentas: '/tabs/dinero?ver=tarjetas', movimientos: '/tabs/movimientos' };
+      this.router.navigateByUrl(urls[alert.target]);
       return;
     }
     // Los presupuestos están más abajo en Inicio mismo.

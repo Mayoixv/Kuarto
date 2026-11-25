@@ -1,5 +1,8 @@
 import { Component, computed, effect, inject, Injectable, input, signal } from '@angular/core';
-import { IonContent } from '@ionic/angular';
+import { IonContent, IonIcon } from '@ionic/angular';
+import { RouterLink } from '@angular/router';
+import { addIcons } from 'ionicons';
+import { calculatorOutline } from 'ionicons/icons';
 import { MetasViewComponent } from '../ahorro/metas-view.component';
 import { DeudasViewComponent } from '../deudas/deudas-view.component';
 import { HelpButtonComponent } from '../help/help-button.component';
@@ -27,6 +30,10 @@ export class PlanesState {
           <app-help-button [topic]="state.section()"></app-help-button>
         </div>
         <app-month-switcher></app-month-switcher>
+        <a routerLink="/calculadoras" class="tools-link">
+          <ion-icon name="calculator-outline" aria-hidden="true"></ion-icon>
+          {{ t('calc.open') }}
+        </a>
       </header>
 
       <app-pill-toggle class="sections" [label]="t('planes.section')" [options]="options()" [value]="state.section()" (valueChange)="setSection($event)"></app-pill-toggle>
@@ -41,7 +48,7 @@ export class PlanesState {
     </ion-content>
   `,
   styleUrls: ['../dinero/dinero.page.scss'],
-  imports: [IonContent, HelpButtonComponent, MonthSwitcherComponent, PillToggleComponent, MetasViewComponent, DeudasViewComponent],
+  imports: [IonContent, IonIcon, RouterLink, HelpButtonComponent, MonthSwitcherComponent, PillToggleComponent, MetasViewComponent, DeudasViewComponent],
 })
 export class PlanesPage {
   protected readonly t = t;
@@ -53,6 +60,7 @@ export class PlanesPage {
   protected readonly options = computed<PillOption[]>(() => SECTIONS.map((value) => ({ value, label: t(`planes.${value}`) })));
 
   constructor() {
+    addIcons({ calculatorOutline });
     effect(() => {
       const ver = this.ver();
       if (ver && (SECTIONS as string[]).includes(ver)) this.state.section.set(ver as PlanesSection);

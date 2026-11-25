@@ -4,7 +4,8 @@ import { Category } from '../../domain/category';
 import { lookOf } from '../category-look';
 import { IonContent, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { alertCircleOutline, arrowDownCircleOutline, checkmarkCircleOutline, timeOutline } from 'ionicons/icons';
+import { alertCircleOutline, arrowDownCircleOutline, calendarOutline, checkmarkCircleOutline, timeOutline } from 'ionicons/icons';
+import { RouterLink } from '@angular/router';
 import { APP_CONTAINER } from '../../app.container';
 import { MonthRecurringExpense } from '../../application/use-cases/get-month-recurring-expenses';
 import { SubscriptionCost } from '../../application/use-cases/get-subscription-cost';
@@ -63,7 +64,7 @@ interface Totals {
   selector: 'app-fijos',
   templateUrl: 'fijos.page.html',
   styleUrls: ['fijos.page.scss'],
-  imports: [HelpButtonComponent, 
+  imports: [HelpButtonComponent, RouterLink,
     LoadingComponent,
     IonContent,
     IonIcon,
@@ -103,7 +104,7 @@ export class FijosPage {
   protected readonly percent = formatPercent;
 
   constructor() {
-    addIcons({ checkmarkCircleOutline, timeOutline, alertCircleOutline, arrowDownCircleOutline });
+    addIcons({ calendarOutline, checkmarkCircleOutline, timeOutline, alertCircleOutline, arrowDownCircleOutline });
     effect(() => {
       const month = this.monthState.month();
       this.monthState.version();

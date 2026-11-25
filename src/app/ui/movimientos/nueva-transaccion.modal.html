@@ -141,7 +141,7 @@
         [label]="t('common.noteOptional')"
         label-placement="floating"
         [value]="note()"
-        (ionInput)="note.set(($event.detail.value ?? '').toString())"
+        (ionInput)="noteChanged(($event.detail.value ?? '').toString())"
       ></ion-input>
     </div>
 

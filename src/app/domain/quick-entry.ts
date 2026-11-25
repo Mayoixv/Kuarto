@@ -2,6 +2,7 @@ import { Account } from './account';
 import { Category } from './category';
 import { Cents } from './money';
 import { addDays, IsoDate } from './month';
+import { CategoryRule, foldText, matchRule } from './rules';
 
 /** Lo que se entendió de una frase como "gasté 500 en gasolina". Lo que no se entendió queda en null. */
 export interface QuickEntry {
@@ -21,6 +22,8 @@ export interface QuickEntry {
 export interface QuickContext {
   accounts?: Pick<Account, 'id' | 'name' | 'archived'>[];
   today?: IsoDate;
+  /** Reglas del usuario: mandan sobre lo que se adivina por nombre, historial o palabras. */
+  rules?: CategoryRule[];
 }
 
 /** Palabras que apuntan a las categorías de la app (por su id, que no cambia con el idioma). */
@@ -143,12 +146,14 @@ export function parseQuickEntry(
   if (account) words = words.filter((w) => !accountWords.has(w) && !ACCOUNT_WORDS.has(w));
 
   const visible = categories.filter((c) => !c.hidden);
-  const byName = visible
+  const rule = matchRule(untagged, context.rules ?? [], (id) => visible.some((c) => c.id === id));
+  const ruled = rule && visible.find((c) => c.id === rule.categoryId);
+  const byName = ruled ? undefined : visible
     .filter((c) => split(plain(c.name)).every((tok) => words.some((w) => similar(w, tok))))
     .sort((a, b) => b.name.length - a.name.length)[0];
-  const learned = byName ? undefined : fromHistory(words, history, visible);
-  const byKeyword = byName || learned ? undefined : visible.find((c) => KEYWORDS[c.id]?.some((k) => words.some((w) => similar(w, k))));
-  const category = byName ?? learned ?? byKeyword;
+  const learned = ruled || byName ? undefined : fromHistory(words, history, visible);
+  const byKeyword = ruled || byName || learned ? undefined : visible.find((c) => KEYWORDS[c.id]?.some((k) => words.some((w) => similar(w, k))));
+  const category = ruled ?? byName ?? learned ?? byKeyword;
 
   const kind = category ? (category.type === 'ingreso' ? 'ingreso' : 'gasto') : INCOME.test(lower) ? 'ingreso' : found ? 'gasto' : null;
   const token = (w: string) => plain(w).replace(/[^\p{L}\p{N}$]/gu, '');
@@ -164,9 +169,10 @@ export function parseQuickEntry(
     amount: found?.cents || null,
     kind,
     categoryId: category?.id ?? null,
-    accountId: account?.id ?? null,
+    // La cuenta nombrada en la frase manda sobre la de la regla.
+    accountId: account?.id ?? (rule?.accountId && context.accounts?.some((a) => a.id === rule.accountId && !a.archived) ? rule.accountId : null),
     date,
-    tags,
+    tags: rule?.tag && !tags.some((t) => foldText(t) === foldText(rule.tag!)) ? [...tags, rule.tag] : tags,
     note: original.charAt(0).toLocaleUpperCase() + original.slice(1),
   };
 }

@@ -166,6 +166,17 @@ ion-alert.app-alert button.alert-button-role-destructive {
   color: var(--negative-on-light);
 }
 
+/* Campos dentro de un aviso (pago mínimo, tasa propia): Ionic les pone texto oscuro fijo, que en el tema oscuro
+   no se leía sobre la tarjeta. */
+ion-alert.app-alert input.alert-input {
+  color: var(--text-on-light);
+  border-bottom-color: var(--line-strong);
+
+  &::placeholder {
+    color: var(--muted-on-light);
+  }
+}
+
 /* Fila de título con una acción a la derecha (por ejemplo, Ajustes en Inicio). */
 .title-row {
   display: flex;

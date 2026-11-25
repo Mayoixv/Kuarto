@@ -2,7 +2,7 @@ import { AppContainer } from '../../app.container';
 import { CASH_ACCOUNT_ID } from '../../domain/account';
 import { MonthKey } from '../../domain/month';
 import { fileDate, saveBinaryFile } from '../file-io';
-import { formatDay, formatMoney, formatPercent, monthLabel } from '../format';
+import { formatAccountMoney, formatDay, formatMoney, formatPercent, monthLabel } from '../format';
 import { t } from '../i18n';
 
 const MARGIN = 48;
@@ -84,6 +84,7 @@ export async function exportMonthPdf(container: AppContainer, month: MonthKey): 
   y += 18;
   const byId = new Map(categories.map((c) => [c.id, c]));
   const accountName = new Map(accounts.map((a) => [a.id, a.name]));
+  const accountById = new Map(accounts.map((a) => [a.id, a]));
   const showAccount = accounts.length > 1;
   const cols = { date: MARGIN, category: MARGIN + 52, note: MARGIN + 170, amount: width - MARGIN };
   text(t('pdf.date'), cols.date, { color: 110, size: 9 });
@@ -102,7 +103,8 @@ export async function exportMonthPdf(container: AppContainer, month: MonthKey): 
     text(formatDay(tx.date), cols.date, { size: 9 });
     text(fit(doc, category?.name ?? t('common.noCategory'), 110), cols.category, { size: 9 });
     text(fit(doc, note, cols.amount - cols.note - 90), cols.note, { size: 9, color: 80 });
-    text(`${income ? '+' : '-'}${money(tx.amount)}`, cols.amount, { size: 9, align: 'right' });
+    const amount = formatAccountMoney(tx.amount, accountById.get(tx.accountId ?? CASH_ACCOUNT_ID)).replace('−', '-');
+    text(`${income ? '+' : '-'}${amount}`, cols.amount, { size: 9, align: 'right' });
     y += LINE;
   }
 

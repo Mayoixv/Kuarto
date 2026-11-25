@@ -339,6 +339,30 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX IF NOT EXISTS idx_debt_payments_debt ON debt_payments(debt_id, date)`,
     ],
   },
+  {
+    version: 18,
+    name: 'cuentas en otra moneda',
+    // Las cuentas que ya existen quedan sin moneda (= la principal) y las transferencias sin monto de llegada
+    // (= el mismo monto): ningún saldo cambia al actualizar.
+    statements: [
+      `ALTER TABLE accounts ADD COLUMN currency TEXT CHECK (currency IS NULL OR currency IN ('DOP', 'USD'))`,
+      `ALTER TABLE transfers ADD COLUMN to_amount INTEGER CHECK (to_amount IS NULL OR to_amount > 0)`,
+    ],
+  },
+  {
+    version: 19,
+    name: 'reglas automáticas de categoría',
+    // Tabla nueva y vacía: no cambia ningún dato. Al borrar la categoría, sus reglas se van con ella.
+    statements: [
+      `CREATE TABLE category_rules (
+         id          TEXT PRIMARY KEY,
+         match       TEXT NOT NULL CHECK (length(trim(match)) >= 2),
+         category_id TEXT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+         account_id  TEXT REFERENCES accounts(id) ON DELETE SET NULL,
+         tag         TEXT
+       )`,
+    ],
+  },
 ];
 
 /** Aplica las migraciones pendientes en orden y devuelve las versiones aplicadas. */

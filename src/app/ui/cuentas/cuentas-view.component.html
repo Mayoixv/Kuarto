@@ -57,7 +57,7 @@
                     <span [class.urgent]="r.urgent">{{ r.statusText }}</span>
                     @if (r.status && r.status.pending > 0) {
                       <button type="button" class="min-link" (click)="askMinimum(r)">
-                        {{ r.status.minimum ? t('cuentas.minimum', { amount: money(min(r.status.minimum, r.status.pending)) }) : t('cuentas.addMinimum') }}
+                        {{ r.status.minimum ? t('cuentas.minimum', { amount: money(min(r.status.minimum, r.status.pending), r.view.account) }) : t('cuentas.addMinimum') }}
                       </button>
                     }
                   </span>
@@ -92,7 +92,7 @@
                     <span [class.urgent]="r.urgent">{{ r.statusText }}</span>
                     @if (r.status && r.status.pending > 0) {
                       <button type="button" class="min-link" (click)="askMinimum(r)">
-                        {{ r.status.minimum ? t('cuentas.minimum', { amount: money(min(r.status.minimum, r.status.pending)) }) : t('cuentas.addMinimum') }}
+                        {{ r.status.minimum ? t('cuentas.minimum', { amount: money(min(r.status.minimum, r.status.pending), r.view.account) }) : t('cuentas.addMinimum') }}
                       </button>
                     }
                   </span>
@@ -125,7 +125,7 @@
           >
             <span class="row-text">
               <span class="row-title">{{ transferText(tr) }}</span>
-              <span class="row-sub">{{ day(tr.date) }}{{ tr.note ? ' · ' + tr.note : '' }}</span>
+              <span class="row-sub">{{ day(tr.date) }}{{ arrived(tr) ? ' · ' + arrived(tr) : '' }}{{ tr.note ? ' · ' + tr.note : '' }}</span>
             </span>
             <span class="row-amount">{{ transferAmount(tr) }}</span>
           </button>

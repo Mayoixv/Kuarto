@@ -49,3 +49,26 @@ describe('tipo de cambio', () => {
     expect(convertCents(-12100, 'DOP', 60.5)).toBe(-200);
   });
 });
+
+describe('tasa propia', () => {
+  it('manda sobre la del servicio sin consultarlo, y al quitarla se vuelve a consultar', async () => {
+    const source = new FakeSource();
+    const rates = new GetExchangeRate(new InMemorySettings(), source);
+    await rates.setManual(59.25, '2026-11-24');
+    expect((await rates.refresh('2026-11-24'))?.usdToDop).toBe(59.25);
+    expect((await rates.cached())?.usdToDop).toBe(59.25);
+    expect(source.calls).toBe(0);
+    await rates.setManual(null, '2026-11-24');
+    expect(await rates.manual()).toBeNull();
+    expect((await rates.refresh('2026-11-24'))?.usdToDop).toBe(60.5);
+    expect(source.calls).toBe(1);
+  });
+
+  it('rechaza tasas fuera de 1 a 1000 o que no son números', async () => {
+    const rates = new GetExchangeRate(new InMemorySettings(), new FakeSource());
+    for (const bad of [0, 0.5, 1001, Number.NaN, Number.POSITIVE_INFINITY]) {
+      await expect(rates.setManual(bad, '2026-11-24')).rejects.toThrow();
+    }
+    expect(await rates.manual()).toBeNull();
+  });
+});

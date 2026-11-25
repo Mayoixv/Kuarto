@@ -462,3 +462,27 @@ li + li .row {
   width: 100%;
   margin-top: 16px;
 }
+
+/* Tasa de cambio propia. */
+.fx-manual {
+  margin: 12px 0 0;
+}
+
+.link-button {
+  min-height: 48px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.error {
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: var(--negative-on-light);
+}

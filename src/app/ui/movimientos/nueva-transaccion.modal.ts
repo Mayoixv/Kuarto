@@ -1,4 +1,5 @@
 import { parseQuickEntry } from '../../domain/quick-entry';
+import { CategoryRule, matchRule, RULE_MAX_LENGTH, RULE_MIN_LENGTH } from '../../domain/rules';
 import { Component, computed, inject, Input, OnDestroy, OnInit, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
@@ -14,7 +15,7 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { addOutline, cameraOutline, close, mic, micOutline } from 'ionicons/icons';
-import { Account, CASH_ACCOUNT_ID } from '../../domain/account';
+import { Account, CASH_ACCOUNT_ID, currencyOf } from '../../domain/account';
 import { accountChoices, accountOptions, rememberAccount } from '../cuentas/account-choices';
 import { PersonalityService } from '../personality.service';
 import { lastCategoryKey } from '../../application/use-cases/quick-expense';
@@ -22,7 +23,7 @@ import { APP_CONTAINER } from '../../app.container';
 import { Category, isExpenseType } from '../../domain/category';
 import { monthOf } from '../../domain/month';
 import { normalizeTags, Transaction } from '../../domain/transaction';
-import { amountToInput, defaultDateFor, formatDay, formatMoney, parseAmount, todayIso } from '../format';
+import { amountToInput, defaultDateFor, formatAccountMoney, formatDay, parseAmount, todayIso } from '../format';
 import { CurrencyState } from '../currency-state';
 import { photoToDataUrl, pickImage } from '../image';
 import { MonthState } from '../month-state';
@@ -84,12 +85,18 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
   protected readonly error = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
-  protected readonly currency = inject(CurrencyState).currency;
+  private readonly mainCurrency = inject(CurrencyState).currency;
+  private readonly account = computed(() => this.accounts().find((a) => a.id === this.accountId()));
+  /** El monto va en la moneda de la cuenta elegida. */
+  protected readonly currency = computed(() => currencyOf(this.account(), this.mainCurrency()));
   protected readonly isEdit = signal(false);
   protected readonly isCopy = signal(false);
   protected readonly maxPhotos = MAX_PHOTOS;
   /** Notas anteriores con su categoría, para que la frase rápida aprenda; se leen al usarla por primera vez. */
   private history?: { note: string; categoryId: string }[];
+  /** Reglas del usuario (Ajustes › Reglas) y la última que se aplicó al escribir la nota. */
+  private rules: CategoryRule[] = [];
+  private appliedRule: string | null = null;
   protected readonly quickText = signal('');
   protected readonly canDictate = signal(false);
   protected readonly listening = signal(false);
@@ -131,7 +138,7 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
       !this.saving(),
   );
 
-  protected readonly money = formatMoney;
+  protected readonly money = (cents: number) => formatAccountMoney(cents, this.account());
   protected readonly abs = Math.abs;
 
   constructor() {
@@ -142,8 +149,9 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
     if (Capacitor.isNativePlatform() && !this.transaction && !this.copyOf) {
       SpeechRecognition.available().then((r) => this.canDictate.set(r.available), () => undefined);
     }
-    const categories = await this.container.categories.list();
+    const [categories, rules] = await Promise.all([this.container.categories.list(), this.container.rules.list()]);
     this.categories.set(categories);
+    this.rules = rules;
 
     const tx = this.transaction ?? this.copyOf;
     const choices = await accountChoices(this.container, tx?.accountId);
@@ -206,7 +214,7 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
       .filter((tx) => tx.note)
       .slice(-500)
       .map((tx) => ({ note: tx.note, categoryId: tx.categoryId }));
-    const entry = parseQuickEntry(text, this.categories(), this.history, { accounts: this.accounts(), today: todayIso() });
+    const entry = parseQuickEntry(text, this.categories(), this.history, { accounts: this.accounts(), today: todayIso(), rules: this.rules });
     if (entry.kind && entry.kind !== this.kind()) {
       this.kind.set(entry.kind);
       this.categoryId.set(null);
@@ -217,6 +225,21 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
     if (entry.date) this.date.set(entry.date);
     if (entry.tags.length) this.tags.set(entry.tags.join(', '));
     this.note.set(entry.note);
+  }
+
+  /**
+   * Al escribir la nota de un movimiento nuevo, una regla que coincide elige categoría, cuenta y etiqueta. Se aplica
+   * una vez por regla: si después se cambia la categoría a mano, seguir escribiendo no la pisa.
+   */
+  protected noteChanged(text: string) {
+    this.note.set(text);
+    if (this.isEdit() || this.splitOn()) return;
+    const rule = matchRule(text, this.rules, (id) => this.options().some((c) => c.id === id && !c.hidden));
+    if (!rule || rule.id === this.appliedRule) return;
+    this.appliedRule = rule.id;
+    this.categoryId.set(rule.categoryId);
+    if (rule.accountId && this.accounts().some((a) => a.id === rule.accountId)) this.accountId.set(rule.accountId);
+    if (rule.tag) this.tags.set(normalizeTags([...normalizeTags(this.tags()), rule.tag]).join(', '));
   }
 
   protected async setKind(value: Kind) {
@@ -305,6 +328,7 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
       }
       if (!this.splitOn()) await this.container.settings.set(lastCategoryKey(this.kind()), categoryId);
       await rememberAccount(this.container, this.accountId());
+      await this.offerRule(categoryId);
       this.saved.set(true);
       await new Promise((resolve) => setTimeout(resolve, SUCCESS_VISIBLE_MS));
       await this.modalCtrl.dismiss(null, 'saved');
@@ -313,6 +337,35 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
     } catch (e) {
       this.error.set(errorText(e, 'common.saveFailed'));
       this.saving.set(false);
+    }
+  }
+
+  /**
+   * Al corregir a mano la categoría de un movimiento con nota, ofrece una regla para que la próxima vez se elija sola
+   * (como Actual o Copilot). No pregunta si ya hay una regla que lleve esa nota a esa categoría.
+   */
+  private async offerRule(categoryId: string) {
+    const before = this.transaction;
+    const match = this.note().replace(/\s+/g, ' ').trim().slice(0, RULE_MAX_LENGTH);
+    if (!before || this.splitOn() || before.categoryId === categoryId || match.length < RULE_MIN_LENGTH) return;
+    if (matchRule(match, this.rules)?.categoryId === categoryId) return;
+    const name = this.categories().find((c) => c.id === categoryId)?.name ?? '';
+    const alert = await this.alerts.create({
+      cssClass: 'app-alert',
+      header: t('reglas.offerTitle'),
+      message: t('reglas.offerMsg', { match, name }),
+      buttons: [
+        { text: t('reglas.offerNo'), role: 'cancel' },
+        { text: t('reglas.offerYes'), role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    if ((await alert.onDidDismiss()).role !== 'confirm') return;
+    try {
+      await this.container.saveCategoryRule.execute({ match, categoryId });
+    } catch (e) {
+      // El movimiento ya se guardó: una regla que no se pudo crear (texto repetido) no debe impedir cerrar.
+      console.error(e);
     }
   }
 
@@ -362,7 +415,7 @@ export class NuevaTransaccionModalComponent implements OnInit, OnDestroy {
       cssClass: 'app-alert',
       header: t('tx.dupTitle'),
       message: t('tx.dupMsg', {
-        amount: formatMoney(amount),
+        amount: this.money(amount),
         name,
         date: formatDay(date),
         note: same.note ? t('tx.dupNote', { note: same.note }) : '',

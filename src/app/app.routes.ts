@@ -32,6 +32,18 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'calculadoras',
+    loadComponent: () => import('./ui/calculadoras/calculadoras.page').then((m) => m.CalculadorasPage),
+  },
+  {
+    path: 'calendario',
+    loadComponent: () => import('./ui/calendario/calendario.page').then((m) => m.CalendarioPage),
+  },
+  {
+    path: 'ajustes/reglas',
+    loadComponent: () => import('./ui/ajustes/reglas.page').then((m) => m.ReglasPage),
+  },
+  {
     path: 'ajustes/categorias',
     loadComponent: () => import('./ui/ajustes/categorias.page').then((m) => m.CategoriasPage),
   },

@@ -1,0 +1,188 @@
+:host ion-content {
+  --padding-bottom: 48px;
+}
+
+.back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  margin: -8px 0 -8px -8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.note {
+  margin: 0 20px 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--muted-on-light);
+}
+
+.card {
+  margin: 0 20px 16px;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: var(--surface-soft-card);
+}
+
+.card-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.card-sub {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted-on-light);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.weekdays span {
+  padding-bottom: 4px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--muted-on-light);
+}
+
+/* Toda la celda es zona táctil (48 px de alto, design.md). */
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-on-light);
+  font: inherit;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &.is-today .num {
+    box-shadow: inset 0 0 0 1.5px var(--accent);
+  }
+
+  &[aria-pressed='true'] .num {
+    background: var(--violet-600);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.num {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+/* Los colores de estado son los de design.md: recibido, pendiente y vencido. */
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+
+  &.vencido {
+    background: var(--overdue-on-light);
+  }
+  &.pendiente {
+    background: var(--pending);
+  }
+  &.hecho {
+    background: var(--received-on-light);
+  }
+  &.spent {
+    background: var(--muted-on-light);
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--muted-on-light);
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+.events {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    border-top: 1px solid var(--line);
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
+}
+
+.event-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.event-title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.event-sub {
+  font-size: 13px;
+  color: var(--muted-on-light);
+
+  &.vencido {
+    color: var(--overdue-on-light);
+  }
+}
+
+.event-amount {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  &.income {
+    color: var(--received-on-light);
+  }
+}

@@ -53,7 +53,7 @@ export class PagoModalComponent implements OnInit {
 
   constructor() {
     addIcons({ close });
-    accountChoices(this.container).then(({ accounts, selected }) => {
+    accountChoices(this.container, null, true).then(({ accounts, selected }) => {
       this.accounts.set(accounts);
       this.accountId.set(selected);
     }, console.error);

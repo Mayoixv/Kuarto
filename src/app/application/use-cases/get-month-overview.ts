@@ -26,16 +26,22 @@ export class GetMonthOverview {
     private readonly transactions: ITransactionRepository,
     private readonly categories: ICategoryRepository,
     private readonly savings: ISavingsRepository,
+    /**
+     * Movimientos tal como se guardaron, para "Recientes": se muestran en la moneda de su cuenta y se abren para
+     * editar. `transactions` puede venir convertido a la moneda principal (solo sirve para sumar).
+     */
+    private readonly raw: ITransactionRepository = transactions,
   ) {}
 
   async execute(month: MonthKey, recentLimit = 5): Promise<MonthOverview> {
-    const [transactions, categories, contributions] = await Promise.all([
+    const [transactions, categories, contributions, stored] = await Promise.all([
       this.transactions.listByMonth(month),
       this.categories.list(),
       this.savings.listContributionsByMonth(month),
+      this.raw === this.transactions ? null : this.raw.listByMonth(month),
     ]);
     const byId = new Map(categories.map((c) => [c.id, c]));
-    const recent = [...transactions]
+    const recent = [...(stored ?? transactions)]
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, recentLimit)
       .map((transaction) => ({ transaction, category: byId.get(transaction.categoryId) }));

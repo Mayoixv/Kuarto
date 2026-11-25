@@ -28,6 +28,31 @@ export class CanAfford {
   ) {}
 
   async execute(amount: Cents, today: IsoDate): Promise<AffordAnswer> {
+    const { input, monthMoney, totalMoney } = await this.cashFlow(today);
+    return {
+      month: canAfford(amount, { ...input, available: monthMoney }),
+      total: canAfford(amount, { ...input, available: totalMoney }),
+    };
+  }
+
+  /**
+   * Sin comprar nada: lo que queda libre por día del dinero del mes después de los fijos y tarjetas pendientes (como
+   * "In My Pocket" de PocketGuard), y el primer día en que tus cuentas quedarían en negativo solo por pagos con fecha.
+   */
+  async outlook(today: IsoDate): Promise<{ perDay: Cents; days: number; pending: Cents; shortfall: { date: IsoDate; label: string | null } | null }> {
+    const { input, monthMoney, totalMoney } = await this.cashFlow(today);
+    const steady = { ...input, dailyBurn: 0 };
+    const month = canAfford(0, { ...steady, available: monthMoney });
+    return {
+      perDay: month.perDay,
+      days: month.days,
+      pending: month.pending,
+      // Si ya hoy está en negativo no es una proyección: son saldos sin ajustar o un sobregiro que ya se ve.
+      shortfall: totalMoney >= 0 ? (canAfford(0, { ...steady, available: totalMoney }).bottleneck ?? null) : null,
+    };
+  }
+
+  private async cashFlow(today: IsoDate) {
     const month = monthOf(today);
     const horizon = addDays(dateInMonth(month, daysInMonth(month)), DAYS_INTO_NEXT_MONTH);
     const [[summary], overview, items, next, categories, cards, transactions] = await Promise.all([
@@ -44,7 +69,7 @@ export class CanAfford {
     const outflows: Outflow[] = pending
       .filter((i) => type.get(i.expense.categoryId) !== 'ingreso')
       .map((i) => ({ date: i.instance.dueDate, amount: i.instance.amount, label: i.expense.name }));
-    for (const c of cards.cards) if (c.dueDate) outflows.push({ date: c.dueDate, amount: c.amount, label: c.account.name });
+    for (const c of cards.cards) if (c.dueDate) outflows.push({ date: c.dueDate, amount: c.inMain, label: c.account.name });
     const incomes: Income[] = pending
       .filter((i) => type.get(i.expense.categoryId) === 'ingreso')
       .map((i) => ({ date: i.instance.dueDate, amount: i.instance.amount }));
@@ -54,10 +79,6 @@ export class CanAfford {
       .reduce((s, t) => s + t.amount, 0);
     const dailyBurn = Math.trunc(variable / Number(today.slice(8, 10)));
 
-    const input = { outflows, incomes, dailyBurn, today };
-    return {
-      month: canAfford(amount, { ...input, available: summary.balance }),
-      total: canAfford(amount, { ...input, available: overview.assets }),
-    };
+    return { input: { outflows, incomes, dailyBurn, today }, monthMoney: summary.balance, totalMoney: overview.assets };
   }
 }

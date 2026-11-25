@@ -30,6 +30,11 @@ export function formatMoneyIn(cents: Cents, target: Currency): string {
   return cents < 0 ? `−${text}` : text;
 }
 
+/** Monto de una cuenta en su moneda; sin moneda propia (o sin cuenta), la principal. */
+export function formatAccountMoney(cents: Cents, account?: { currency?: Currency | null } | null): string {
+  return formatMoneyIn(cents, account?.currency ?? currency);
+}
+
 /** Convierte lo escrito en un campo de monto a centavos; null si no es un monto válido mayor que cero. */
 export function parseAmount(text: string): Cents | null {
   const value = Number(text.trim());

@@ -1,3 +1,4 @@
+import { Currency } from './currency';
 import { Cents } from './money';
 import { addMonths, dateInMonth, IsoDate, monthOf } from './month';
 
@@ -38,6 +39,11 @@ export interface Account {
   archived: boolean;
   /** Últimos 4 dígitos de la tarjeta de crédito, para reconocerla. */
   cardLast4?: string | null;
+  /**
+   * Moneda de la cuenta: sus movimientos, transferencias y saldo van en ella. Sin valor, la moneda principal
+   * (la de Ajustes), que es lo que tenían todas las cuentas antes de la 1.0.18.
+   */
+  currency?: Currency | null;
 }
 
 /** Dinero que pasa de una cuenta a otra: no es ingreso ni gasto. */
@@ -48,7 +54,15 @@ export interface Transfer {
   fromAccountId: string;
   toAccountId: string;
   note: string;
+  /** Solo entre cuentas de distinta moneda: lo que llega a la cuenta destino, en su moneda (guarda la tasa usada). */
+  toAmount?: Cents | null;
 }
+
+/** Lo que entra a la cuenta destino de una transferencia, en la moneda de esa cuenta. */
+export const arrivingAmount = (t: Pick<Transfer, 'amount' | 'toAmount'>): Cents => t.toAmount ?? t.amount;
+
+/** La moneda en que van los montos de la cuenta. */
+export const currencyOf = (a: Pick<Account, 'currency'> | undefined, main: Currency): Currency => a?.currency ?? main;
 
 export const isCard = (a: Pick<Account, 'type'>) => a.type === 'tarjeta';
 
